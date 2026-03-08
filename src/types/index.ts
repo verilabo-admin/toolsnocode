@@ -1,0 +1,92 @@
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  parent_id: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface Tool {
+  id: string;
+  name: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  website: string;
+  logo_url: string;
+  screenshot_urls: string[];
+  category_id: string;
+  pricing: 'free' | 'freemium' | 'paid' | 'enterprise';
+  pricing_details: string;
+  tags: string[];
+  rating: number;
+  review_count: number;
+  upvotes: number;
+  is_featured: boolean;
+  is_trending: boolean;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  created_at: string;
+  updated_at: string;
+  user_id?: string;
+  category?: Category;
+}
+
+export interface Expert {
+  id: string;
+  name: string;
+  slug: string;
+  bio: string;
+  avatar_url: string;
+  country: string;
+  languages: string[];
+  hourly_rate: number;
+  rating: number;
+  review_count: number;
+  portfolio_url: string;
+  is_featured: boolean;
+  created_at: string;
+  user_id?: string;
+  tools?: Tool[];
+}
+
+export interface Tutorial {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  tool_id: string;
+  video_url: string;
+  content_type: 'video' | 'guide' | 'course' | 'article';
+  duration_minutes: number;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  author_name: string;
+  thumbnail_url: string;
+  created_at: string;
+  user_id?: string;
+  tool?: Tool;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  screenshot_url: string;
+  live_url: string;
+  author_name: string;
+  upvotes: number;
+  created_at: string;
+  user_id?: string;
+  tools?: Tool[];
+}
+
+export interface Favorite {
+  id: string;
+  user_id: string;
+  item_type: 'tools' | 'experts' | 'tutorials' | 'projects';
+  item_id: string;
+  created_at: string;
+}

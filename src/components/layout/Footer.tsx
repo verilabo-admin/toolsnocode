@@ -1,0 +1,80 @@
+import { Link } from 'react-router-dom';
+import { Zap, Github, Twitter } from 'lucide-react';
+
+const footerLinks = {
+  Discover: [
+    { label: 'AI Tools', href: '/tools?category=ai' },
+    { label: 'No-Code Tools', href: '/tools?category=no-code' },
+    { label: 'Growth Tools', href: '/tools?category=growth' },
+    { label: 'Trending', href: '/tools?sort=trending' },
+  ],
+  Community: [
+    { label: 'Experts', href: '/experts' },
+    { label: 'Projects', href: '/projects' },
+    { label: 'Tutorials', href: '/tutorials' },
+  ],
+  Resources: [
+    { label: 'Best AI Tools', href: '/tools?category=ai' },
+    { label: 'Best No-Code Tools', href: '/tools?category=no-code' },
+    { label: 'Submit a Tool', href: '/tools' },
+  ],
+};
+
+export default function Footer() {
+  return (
+    <footer className="border-t border-surface-800/50 bg-surface-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+          <div className="col-span-2 md:col-span-1">
+            <Link to="/" className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-lg font-bold text-white">
+                Tools<span className="text-brand-400">NoCode</span>
+              </span>
+            </Link>
+            <p className="text-sm text-surface-500 leading-relaxed mb-6">
+              The discovery layer for the AI Builder Economy. Find tools, experts, and resources.
+            </p>
+            <div className="flex gap-3">
+              <a href="#" className="p-2 text-surface-500 hover:text-surface-200 bg-surface-900 rounded-lg border border-surface-800 transition-colors">
+                <Twitter className="w-4 h-4" />
+              </a>
+              <a href="#" className="p-2 text-surface-500 hover:text-surface-200 bg-surface-900 rounded-lg border border-surface-800 transition-colors">
+                <Github className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <h4 className="text-sm font-semibold text-surface-200 mb-4">{title}</h4>
+              <ul className="space-y-2.5">
+                {links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
+                      className="text-sm text-surface-500 hover:text-brand-400 transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-surface-800/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-surface-600">
+            {new Date().getFullYear()} ToolsNoCode. All rights reserved.
+          </p>
+          <p className="text-sm text-surface-600">
+            Built for the AI Builder Economy
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
