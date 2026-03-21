@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
+import ClaimButton from '../components/ui/ClaimButton';
 import type { Expert, Tool } from '../types';
 import { useSEO } from '../hooks/useSEO';
 
@@ -15,6 +16,10 @@ export default function ExpertDetailPage() {
   const [expert, setExpert] = useState<Expert | null>(null);
   const [tools, setTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleClaimed = () => {
+    setExpert((prev) => prev ? { ...prev, user_id: user?.id } : prev);
+  };
 
   useEffect(() => {
     async function load() {
@@ -155,6 +160,9 @@ export default function ExpertDetailPage() {
                   View Portfolio
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
+              )}
+              {!expert.user_id && (
+                <ClaimButton itemType="experts" itemId={expert.id} onClaimed={handleClaimed} />
               )}
               {user?.id === expert.user_id && (
                 <Link to={`/experts/${expert.slug}/edit`} className="btn-secondary text-sm">

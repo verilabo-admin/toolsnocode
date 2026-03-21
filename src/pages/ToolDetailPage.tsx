@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
+import ClaimButton from '../components/ui/ClaimButton';
 import type { Tool, Tutorial, Expert, Project } from '../types';
 import { useSEO } from '../hooks/useSEO';
 
@@ -17,6 +18,10 @@ export default function ToolDetailPage() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [tool, setTool] = useState<Tool | null>(null);
   const [alternatives, setAlternatives] = useState<Tool[]>([]);
+
+  const handleClaimed = () => {
+    setTool((prev) => prev ? { ...prev, user_id: user?.id } : prev);
+  };
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -204,6 +209,9 @@ export default function ToolDetailPage() {
                   Visit Website
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
+              )}
+              {!tool.user_id && (
+                <ClaimButton itemType="tools" itemId={tool.id} onClaimed={handleClaimed} />
               )}
               {user?.id === tool.user_id && (
                 <Link to={`/tools/${tool.slug}/edit`} className="btn-secondary text-sm">
