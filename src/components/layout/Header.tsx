@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Home, User, LogOut, CreditCard } from 'lucide-react';
-import { useAuth } from '../auth/AuthProvider';
+import { useAuth } from '../../contexts/AuthContext';
 import { SubscriptionStatus } from '../subscription/SubscriptionStatus';
 
-export function Header() {
+export default function Header() {
   const { user, signOut } = useAuth();
 
   return (

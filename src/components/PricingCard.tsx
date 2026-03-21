@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../lib/stripe';
 import type { StripeProduct } from '../stripe-config';
 
