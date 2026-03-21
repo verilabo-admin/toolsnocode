@@ -206,7 +206,7 @@ export default function ToolDetailPage() {
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 mb-3">
               {tool.website && (
                 <a href={tool.website} target="_blank" rel="noopener noreferrer" className="btn-primary text-sm">
                   <Globe className="w-4 h-4" />
@@ -214,30 +214,32 @@ export default function ToolDetailPage() {
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
-              {!tool.user_id && (
-                <ClaimButton itemType="tools" itemId={tool.id} itemName={tool.name} onClaimed={handleClaimed} />
-              )}
               {user?.id === tool.user_id && (
                 <Link to={`/tools/${tool.slug}/edit`} className="btn-secondary text-sm">
                   <Pencil className="w-4 h-4" />
                   Edit
                 </Link>
               )}
-              {user?.id === tool.user_id && !tool.is_verified && tool.website && (
-                <VerifyToolButton
-                  toolId={tool.id}
-                  toolName={tool.name}
-                  toolWebsite={tool.website}
-                  initialToken={tool.verification_token}
-                  initialVerified={tool.is_verified ?? false}
-                  onVerified={() => setTool((prev) => prev ? { ...prev, is_verified: true } : prev)}
-                />
-              )}
               <FavoriteButton
                 isFavorite={isFavorite('tools', tool.id)}
                 onToggle={() => toggleFavorite('tools', tool.id)}
               />
             </div>
+
+            {!tool.user_id && (
+              <ClaimButton itemType="tools" itemId={tool.id} itemName={tool.name} onClaimed={handleClaimed} />
+            )}
+
+            {user?.id === tool.user_id && !tool.is_verified && tool.website && (
+              <VerifyToolButton
+                toolId={tool.id}
+                toolName={tool.name}
+                toolWebsite={tool.website}
+                initialToken={tool.verification_token}
+                initialVerified={tool.is_verified ?? false}
+                onVerified={() => setTool((prev) => prev ? { ...prev, is_verified: true } : prev)}
+              />
+            )}
           </div>
         </div>
       </div>
