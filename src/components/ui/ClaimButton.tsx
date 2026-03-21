@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ShieldCheck, Loader2, AlertCircle, Clock, XCircle, CheckCircle2,
-  ChevronDown, ChevronUp, Globe, FileText, Copy, Check, RefreshCw, ExternalLink
+  ChevronDown, ChevronUp, Copy, Check, RefreshCw, ExternalLink
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -256,37 +256,11 @@ export default function ClaimButton({ itemType, itemId, itemName, itemWebsite, o
           <div className="px-4 pt-4 pb-3 border-b border-surface-700/50">
             <p className="text-sm font-medium text-surface-200">Claim ownership of "{itemName}"</p>
             <p className="text-xs text-surface-500 mt-0.5">
-              Choose how you want to prove you own this listing.
+              {hasDnsOption
+                ? 'Verify domain ownership to claim this listing instantly.'
+                : 'Tell us how you are connected to this listing.'}
             </p>
           </div>
-
-          {hasDnsOption && (
-            <div className="flex border-b border-surface-700/50">
-              <button
-                onClick={() => { setMethod('dns'); setManualError(''); setDnsError(''); }}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-medium transition-colors ${
-                  method === 'dns'
-                    ? 'text-sky-400 bg-sky-500/10 border-b-2 border-sky-500'
-                    : 'text-surface-400 hover:text-surface-200'
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5" />
-                DNS Verification
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-400 font-medium">Instant</span>
-              </button>
-              <button
-                onClick={() => { setMethod('manual'); setManualError(''); setDnsError(''); }}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-medium transition-colors ${
-                  method === 'manual'
-                    ? 'text-amber-400 bg-amber-500/10 border-b-2 border-amber-500'
-                    : 'text-surface-400 hover:text-surface-200'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                Manual Review
-              </button>
-            </div>
-          )}
 
           {method === 'dns' && hasDnsOption && (
             <div className="p-4 space-y-4">
@@ -374,7 +348,7 @@ export default function ClaimButton({ itemType, itemId, itemName, itemWebsite, o
                 </div>
               )}
 
-              <div className="pt-1 border-t border-surface-700/50 flex justify-between items-center">
+              <div className="pt-1 border-t border-surface-700/50">
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); setDnsError(''); }}
@@ -382,15 +356,6 @@ export default function ClaimButton({ itemType, itemId, itemName, itemWebsite, o
                 >
                   Cancel
                 </button>
-                {hasDnsOption && (
-                  <button
-                    type="button"
-                    onClick={() => setMethod('manual')}
-                    className="text-xs text-surface-500 hover:text-surface-300 transition-colors"
-                  >
-                    Can't add DNS? Use manual review
-                  </button>
-                )}
               </div>
             </div>
           )}
