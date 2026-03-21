@@ -6,7 +6,7 @@ import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
 import CategoryCard from '../components/ui/CategoryCard';
 import { useSEO } from '../hooks/useSEO';
-import { useAuth } from '../components/auth/AuthProvider';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function HomePage() {
   const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
