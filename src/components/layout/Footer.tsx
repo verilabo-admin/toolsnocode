@@ -72,13 +72,13 @@ export default function Footer() {
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
             <Link to="/legal/privacy" className="text-sm text-surface-600 hover:text-brand-400 transition-colors">
-              Política de Privacidad
+              Privacy Policy
             </Link>
             <Link to="/legal/terms" className="text-sm text-surface-600 hover:text-brand-400 transition-colors">
-              Términos de Servicio
+              Terms of Service
             </Link>
             <Link to="/legal/cookies" className="text-sm text-surface-600 hover:text-brand-400 transition-colors">
-              Cookies
+              Cookie Policy
             </Link>
           </div>
         </div>
