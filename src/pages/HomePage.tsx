@@ -6,6 +6,7 @@ import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
 import CategoryCard from '../components/ui/CategoryCard';
 import { useSEO } from '../hooks/useSEO';
+import { useAuth } from '../components/auth/AuthProvider';
 
 export default function HomePage() {
   const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
@@ -14,6 +15,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState({ tools: 0, experts: 0, tutorials: 0, projects: 0 });
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
 
   useSEO({
     url: '/',
@@ -91,6 +93,34 @@ export default function HomePage() {
                 Search
               </button>
             </form>
+
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+              {user ? (
+                <Link
+                  to="/pricing"
+                  className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                >
+                  View Pricing
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/signup"
+                    className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                  >
+                    Get Started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                </>
+              )}
+            </div>
 
             <div className="flex flex-wrap justify-center gap-6 text-sm text-surface-500 animate-slide-up" style={{ animationDelay: '300ms' }}>
               <div className="flex items-center gap-2">
