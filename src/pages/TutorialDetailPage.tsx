@@ -32,48 +32,58 @@ const pricingColors: Record<string, string> = {
   enterprise: 'bg-rose-500/15 text-rose-400 border-rose-500/20',
 };
 
-function getEmbedUrl(url: string): string | null {
+interface VideoInfo {
+  type: 'youtube' | 'vimeo' | 'loom' | 'other';
+  embedUrl: string;
+  videoId?: string;
+  thumbnailUrl?: string;
+}
+
+function parseVideoUrl(url: string): VideoInfo | null {
   if (!url) return null;
 
   try {
     const u = new URL(url);
 
-    // YouTube: youtube.com/watch?v=ID or youtu.be/ID or youtube.com/embed/ID
     if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
       let videoId: string | null = null;
 
       if (u.hostname === 'youtu.be') {
         videoId = u.pathname.slice(1).split('?')[0];
       } else if (u.pathname.startsWith('/embed/')) {
-        return url; // already embed
+        videoId = u.pathname.split('/embed/')[1].split('?')[0];
       } else {
         videoId = u.searchParams.get('v');
       }
 
       if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+        return {
+          type: 'youtube',
+          videoId,
+          embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`,
+          thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        };
       }
     }
 
-    // Vimeo: vimeo.com/ID or player.vimeo.com/video/ID
     if (u.hostname.includes('vimeo.com')) {
-      if (u.hostname === 'player.vimeo.com') return url;
+      if (u.hostname === 'player.vimeo.com') {
+        return { type: 'vimeo', embedUrl: url };
+      }
       const match = u.pathname.match(/\/(\d+)/);
       if (match) {
-        return `https://player.vimeo.com/video/${match[1]}`;
+        return { type: 'vimeo', videoId: match[1], embedUrl: `https://player.vimeo.com/video/${match[1]}` };
       }
     }
 
-    // Loom: loom.com/share/ID
     if (u.hostname.includes('loom.com')) {
       const match = u.pathname.match(/\/share\/([a-zA-Z0-9]+)/);
       if (match) {
-        return `https://www.loom.com/embed/${match[1]}`;
+        return { type: 'loom', videoId: match[1], embedUrl: `https://www.loom.com/embed/${match[1]}` };
       }
     }
 
-    // If it already looks like an embed or iframe src, return as-is
-    return url;
+    return { type: 'other', embedUrl: url };
   } catch {
     return null;
   }
@@ -87,6 +97,7 @@ export default function TutorialDetailPage() {
   const [tool, setTool] = useState<Tool | null>(null);
   const [relatedTutorials, setRelatedTutorials] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [videoActive, setVideoActive] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -145,8 +156,12 @@ export default function TutorialDetailPage() {
   }
 
   const Icon = typeIcons[tutorial.content_type] || FileText;
-  const embedUrl = tutorial.video_url ? getEmbedUrl(tutorial.video_url) : null;
-  const isVideo = tutorial.content_type === 'video' && embedUrl;
+  const videoInfo = tutorial.video_url ? parseVideoUrl(tutorial.video_url) : null;
+  const hasVideo = !!videoInfo;
+  const previewThumb =
+    videoInfo?.thumbnailUrl ||
+    tutorial.thumbnail_url ||
+    null;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
@@ -161,54 +176,61 @@ export default function TutorialDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Video embed */}
-          {isVideo ? (
-            <div className="aspect-video bg-surface-950 rounded-2xl overflow-hidden border border-surface-800/50 shadow-xl shadow-black/30">
-              <iframe
-                src={embedUrl}
-                title={tutorial.title}
-                className="w-full h-full"
-                allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                loading="lazy"
-              />
-            </div>
-          ) : tutorial.thumbnail_url ? (
-            <div className="aspect-video bg-surface-900 rounded-2xl overflow-hidden border border-surface-800/50 relative group">
-              <img
-                src={tutorial.thumbnail_url}
-                alt={tutorial.title}
-                className="w-full h-full object-cover"
-              />
-              {tutorial.video_url && (
-                <a
-                  href={tutorial.video_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors"
-                >
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform">
-                    <Play className="w-7 h-7 text-white ml-1" fill="white" />
-                  </div>
-                </a>
+          {/* Video / thumbnail section */}
+          {hasVideo && (
+            <div className="aspect-video bg-surface-950 rounded-2xl overflow-hidden border border-surface-800/50 shadow-xl shadow-black/30 relative">
+              {videoActive ? (
+                <iframe
+                  src={`${videoInfo!.embedUrl}&autoplay=1`}
+                  title={tutorial.title}
+                  className="w-full h-full"
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              ) : (
+                <>
+                  {previewThumb ? (
+                    <img
+                      src={previewThumb}
+                      alt={tutorial.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-surface-900" />
+                  )}
+                  <div className="absolute inset-0 bg-black/30" />
+                  <button
+                    onClick={() => setVideoActive(true)}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-3 group"
+                    aria-label="Play video"
+                  >
+                    <div className="w-20 h-20 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/25 group-hover:scale-110 group-hover:bg-white/25 transition-all duration-200 shadow-xl">
+                      <Play className="w-8 h-8 text-white ml-1.5" fill="white" />
+                    </div>
+                    <span className="text-white/80 text-sm font-medium bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
+                      Click to play
+                    </span>
+                  </button>
+                  <a
+                    href={tutorial.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute bottom-3 right-3 flex items-center gap-1.5 text-xs text-white/70 hover:text-white bg-black/50 hover:bg-black/70 px-2.5 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Open on YouTube
+                  </a>
+                </>
               )}
             </div>
-          ) : tutorial.video_url ? (
-            <div className="aspect-video bg-surface-900 rounded-2xl overflow-hidden border border-surface-800/50 flex items-center justify-center">
-              <a
-                href={tutorial.video_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center gap-3 text-surface-400 hover:text-white transition-colors"
-              >
-                <div className="w-16 h-16 bg-surface-800 rounded-full flex items-center justify-center">
-                  <Play className="w-7 h-7 ml-1" />
-                </div>
-                <span className="text-sm">Watch on external site</span>
-              </a>
+          )}
+          {!hasVideo && previewThumb && (
+            <div className="aspect-video bg-surface-900 rounded-2xl overflow-hidden border border-surface-800/50">
+              <img src={previewThumb} alt={tutorial.title} className="w-full h-full object-cover" />
             </div>
-          ) : null}
+          )}
 
           {/* Header info */}
           <div>
@@ -262,8 +284,8 @@ export default function TutorialDetailPage() {
             <p className="text-surface-300 leading-relaxed whitespace-pre-line">{tutorial.description}</p>
           </div>
 
-          {/* External link fallback */}
-          {tutorial.video_url && !isVideo && (
+          {/* External link for non-embeddable content */}
+          {tutorial.video_url && !hasVideo && (
             <a
               href={tutorial.video_url}
               target="_blank"
