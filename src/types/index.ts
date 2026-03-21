@@ -90,3 +90,16 @@ export interface Favorite {
   item_id: string;
   created_at: string;
 }
+
+export interface ClaimRequest {
+  id: string;
+  item_type: 'tools' | 'experts';
+  item_id: string;
+  user_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  justification: string;
+  contact_proof: string;
+  admin_note: string;
+  reviewed_at: string | null;
+  created_at: string;
+}

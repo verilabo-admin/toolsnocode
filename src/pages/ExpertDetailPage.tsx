@@ -162,7 +162,7 @@ export default function ExpertDetailPage() {
                 </a>
               )}
               {!expert.user_id && (
-                <ClaimButton itemType="experts" itemId={expert.id} onClaimed={handleClaimed} />
+                <ClaimButton itemType="experts" itemId={expert.id} itemName={expert.name} onClaimed={handleClaimed} />
               )}
               {user?.id === expert.user_id && (
                 <Link to={`/experts/${expert.slug}/edit`} className="btn-secondary text-sm">

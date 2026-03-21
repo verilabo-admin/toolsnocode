@@ -16,6 +16,7 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import ProjectFormPage from './pages/ProjectFormPage';
 import AuthPage from './pages/AuthPage';
 import FavoritesPage from './pages/FavoritesPage';
+import AccountPage from './pages/AccountPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="auth" element={<AuthPage />} />
+            <Route path="account" element={<AccountPage />} />
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="tools" element={<ToolsPage />} />
             <Route path="tools/new" element={<ToolFormPage />} />

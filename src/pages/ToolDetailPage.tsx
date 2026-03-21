@@ -209,7 +209,7 @@ export default function ToolDetailPage() {
                 </a>
               )}
               {!tool.user_id && (
-                <ClaimButton itemType="tools" itemId={tool.id} onClaimed={handleClaimed} />
+                <ClaimButton itemType="tools" itemId={tool.id} itemName={tool.name} onClaimed={handleClaimed} />
               )}
               {user?.id === tool.user_id && (
                 <Link to={`/tools/${tool.slug}/edit`} className="btn-secondary text-sm">

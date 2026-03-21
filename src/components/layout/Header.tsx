@@ -139,6 +139,13 @@ export default function Header() {
                         <p className="text-sm text-surface-200 truncate">{user.email}</p>
                       </div>
                       <Link
+                        to="/account"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 hover:text-white hover:bg-surface-800/80 transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        My Account
+                      </Link>
+                      <Link
                         to="/favorites"
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-surface-300 hover:text-white hover:bg-surface-800/80 transition-colors"
                       >
@@ -195,6 +202,13 @@ export default function Header() {
             {user && (
               <>
                 <div className="border-t border-surface-800/50 pt-2 mt-2">
+                  <Link
+                    to="/account"
+                    className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-sm font-medium text-surface-400 hover:text-surface-100 hover:bg-surface-800/50 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    My Account
+                  </Link>
                   <Link
                     to="/favorites"
                     className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-sm font-medium text-surface-400 hover:text-surface-100 hover:bg-surface-800/50 transition-colors"
