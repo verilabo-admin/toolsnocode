@@ -8,6 +8,7 @@ const navLinks = [
   { label: 'Experts', href: '/experts' },
   { label: 'Tutorials', href: '/tutorials' },
   { label: 'Projects', href: '/projects' },
+  { label: 'News', href: '/news' },
 ];
 
 const createLinks = [

@@ -16,7 +16,8 @@ const footerLinks = {
   Resources: [
     { label: 'Best AI Tools', href: '/tools?category=ai' },
     { label: 'Best No-Code Tools', href: '/tools?category=no-code' },
-    { label: 'Submit a Tool', href: '/tools' },
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'News', href: '/news' },
   ],
 };
 

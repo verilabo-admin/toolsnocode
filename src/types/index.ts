@@ -94,6 +94,21 @@ export interface Favorite {
   created_at: string;
 }
 
+export interface NewsArticle {
+  id: string;
+  title: string;
+  summary: string;
+  content: string | null;
+  url: string;
+  source: string;
+  image_url: string | null;
+  category: string;
+  tags: string[];
+  published_at: string;
+  is_featured: boolean;
+  created_at: string;
+}
+
 export interface ClaimRequest {
   id: string;
   item_type: 'tools' | 'experts';

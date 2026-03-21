@@ -20,6 +20,7 @@ import AccountPage from './pages/AccountPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
+import NewsPage from './pages/NewsPage';
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="projects/new" element={<ProjectFormPage />} />
             <Route path="projects/:slug/edit" element={<ProjectFormPage />} />
             <Route path="projects/:slug" element={<ProjectDetailPage />} />
+            <Route path="news" element={<NewsPage />} />
             <Route path="legal/privacy" element={<PrivacyPolicyPage />} />
             <Route path="legal/terms" element={<TermsOfServicePage />} />
             <Route path="legal/cookies" element={<CookiePolicyPage />} />
