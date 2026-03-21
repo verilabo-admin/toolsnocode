@@ -97,6 +97,8 @@ export default function TutorialDetailPage() {
   const [tool, setTool] = useState<Tool | null>(null);
   const [relatedTutorials, setRelatedTutorials] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [videoActive, setVideoActive] = useState(false);
+  const [embedFailed, setEmbedFailed] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -177,33 +179,77 @@ export default function TutorialDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Video / thumbnail section */}
           {(hasVideo || previewThumb) && (
-            <a
-              href={tutorial.video_url ?? undefined}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block aspect-video bg-surface-950 rounded-2xl overflow-hidden border border-surface-800/50 shadow-xl shadow-black/30 relative group"
-            >
-              {previewThumb ? (
-                <img
-                  src={previewThumb}
-                  alt={tutorial.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+            <div className="aspect-video bg-surface-950 rounded-2xl overflow-hidden border border-surface-800/50 shadow-xl shadow-black/30 relative">
+              {videoActive && !embedFailed ? (
+                <>
+                  <iframe
+                    src={`${videoInfo!.embedUrl}&autoplay=1`}
+                    title={tutorial.title}
+                    className="w-full h-full"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    onError={() => setEmbedFailed(true)}
+                  />
+</>
               ) : (
-                <div className="w-full h-full bg-surface-900" />
+                <>
+                  {previewThumb ? (
+                    <img
+                      src={previewThumb}
+                      alt={tutorial.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-surface-900" />
+                  )}
+                  <div className="absolute inset-0 bg-black/30" />
+                  {embedFailed ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                      <p className="text-white/70 text-sm text-center max-w-xs">
+                        Este video no permite reproducción en sitios externos.
+                      </p>
+                      <a
+                        href={tutorial.video_url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors duration-200 shadow-lg"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Ver en YouTube
+                      </a>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setVideoActive(true)}
+                        className="absolute inset-0 flex flex-col items-center justify-center gap-3 group"
+                        aria-label="Play video"
+                      >
+                        <div className="w-20 h-20 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/25 group-hover:scale-110 group-hover:bg-white/25 transition-all duration-200 shadow-xl">
+                          <Play className="w-8 h-8 text-white ml-1.5" fill="white" />
+                        </div>
+                        <span className="text-white/80 text-sm font-medium bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
+                          Click to play
+                        </span>
+                      </button>
+                      {tutorial.video_url && (
+                        <a
+                          href={tutorial.video_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute bottom-3 right-3 flex items-center gap-1.5 text-xs text-white/70 hover:text-white bg-black/50 hover:bg-black/70 px-2.5 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Open on YouTube
+                        </a>
+                      )}
+                    </>
+                  )}
+                </>
               )}
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-200" />
-              {tutorial.video_url && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                  <div className="w-20 h-20 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/25 group-hover:scale-110 group-hover:bg-white/25 transition-all duration-200 shadow-xl">
-                    <Play className="w-8 h-8 text-white ml-1.5" fill="white" />
-                  </div>
-                  <span className="text-white/80 text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-                    Watch on YouTube
-                  </span>
-                </div>
-              )}
-            </a>
+            </div>
           )}
 
           {/* Header info */}
