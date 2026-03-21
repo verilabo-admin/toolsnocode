@@ -1,68 +1,183 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Home, User, LogOut, CreditCard } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Zap, Menu, X, User, LogOut, Heart, Settings, CreditCard } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { SubscriptionStatus } from '../subscription/SubscriptionStatus';
+
+const navItems = [
+  { name: 'Tools', href: '/tools' },
+  { name: 'Experts', href: '/experts' },
+  { name: 'Tutorials', href: '/tutorials' },
+  { name: 'Projects', href: '/projects' },
+  { name: 'Pricing', href: '/pricing' },
+  { name: 'News', href: '/news' },
+];
 
 export default function Header() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const isActive = (href: string) =>
+    location.pathname === href || location.pathname.startsWith(href + '/');
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <Home className="h-8 w-8 text-indigo-600" />
-            <span className="text-xl font-bold text-gray-900">ToolsNoCode</span>
-          </Link>
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-8">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-lg font-bold text-white">
+                Tools<span className="text-brand-400">NoCode</span>
+              </span>
+            </Link>
 
-          <nav className="flex items-center space-x-4">
-            {user ? (
-              <>
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => (
                 <Link
-                  to="/pricing"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+                  key={item.name}
+                  to={item.href}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? 'text-brand-400 bg-brand-500/10'
+                      : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/50'
+                  }`}
                 >
-                  <CreditCard className="h-4 w-4" />
-                  <span>Pricing</span>
+                  {item.name}
                 </Link>
-                <div className="flex items-center space-x-1 text-gray-700 px-3 py-2">
-                  <User className="h-4 w-4" />
-                  <span className="text-sm">{user.email}</span>
-                </div>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {user ? (
+              <div className="relative">
                 <button
-                  onClick={signOut}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline text-sm">{user.email?.split('@')[0]}</span>
                 </button>
-              </>
+
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-56 rounded-xl bg-surface-900 border border-surface-800 shadow-xl z-50 py-1">
+                      <div className="px-4 py-3 border-b border-surface-800">
+                        <p className="text-sm font-medium text-surface-200 truncate">{user.email}</p>
+                      </div>
+                      <Link
+                        to="/account"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Account
+                      </Link>
+                      <Link
+                        to="/favorites"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
+                      >
+                        <Heart className="w-4 h-4" />
+                        Favorites
+                      </Link>
+                      <Link
+                        to="/pricing"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        Pricing
+                      </Link>
+                      <div className="border-t border-surface-800 mt-1 pt-1">
+                        <button
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            signOut();
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-surface-800/50 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             ) : (
-              <>
+              <div className="hidden sm:flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+                  className="px-4 py-2 text-sm font-medium text-surface-300 hover:text-surface-100 transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-md text-sm font-medium"
+                  className="btn-primary text-sm"
                 >
-                  Sign Up
+                  Get Started
                 </Link>
-              </>
+              </div>
             )}
-          </nav>
-        </div>
-        
-        {user && (
-          <div className="pb-4">
-            <SubscriptionStatus />
+
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
-        )}
+        </div>
       </div>
+
+      {mobileOpen && (
+        <div className="md:hidden border-t border-surface-800/50 bg-surface-950/95 backdrop-blur-xl">
+          <div className="px-4 py-3 space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(item.href)
+                    ? 'text-brand-400 bg-brand-500/10'
+                    : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/50'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+            {!user && (
+              <div className="pt-3 border-t border-surface-800 space-y-2">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-2.5 rounded-lg text-sm font-medium text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-2.5 rounded-lg text-sm font-medium text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
