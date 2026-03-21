@@ -94,17 +94,16 @@ export default function HomePage() {
               </button>
             </form>
 
-            {!user && (
-              <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center animate-slide-up" style={{ animationDelay: '250ms' }}>
-                <Link to="/signup" className="btn-primary px-8 py-3 text-base">
-                  Get Started
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link to="/login" className="btn-secondary px-8 py-3 text-base">
-                  Sign In
-                </Link>
-              </div>
-            )}
+            <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center animate-slide-up" style={{ animationDelay: '250ms' }}>
+              <Link to="/tools" className="btn-primary px-8 py-3 text-base">
+                <Search className="w-4 h-4" />
+                Ver herramientas
+              </Link>
+              <Link to={user ? '/tools/new' : '/signup?next=/tools/new'} className="btn-secondary px-8 py-3 text-base">
+                <Zap className="w-4 h-4" />
+                Añadir herramienta
+              </Link>
+            </div>
 
             <div className="flex flex-wrap justify-center gap-6 text-sm text-surface-500 animate-slide-up" style={{ animationDelay: '300ms' }}>
               <div className="flex items-center gap-2">

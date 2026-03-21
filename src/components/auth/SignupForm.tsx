@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -13,6 +13,8 @@ export function SignupForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextPath = searchParams.get('next') || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,10 +46,10 @@ export function SignupForm() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess('Account created successfully! You can now sign in.');
+        setSuccess('Account created! Redirecting...');
         setTimeout(() => {
-          navigate('/login');
-        }, 2000);
+          navigate(`/login${nextPath !== '/' ? `?next=${encodeURIComponent(nextPath)}` : ''}`);
+        }, 1500);
       }
     } catch (err) {
       setError('An unexpected error occurred');

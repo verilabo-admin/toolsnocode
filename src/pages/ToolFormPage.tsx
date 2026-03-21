@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Save, Loader2, ArrowLeft, Trash2, Plus, X } from 'lucide-react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { Save, Loader2, ArrowLeft, Trash2, Plus, X, Rocket, TrendingUp, Star, ArrowRight, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUploader from '../components/ui/ImageUploader';
@@ -15,6 +15,7 @@ export default function ToolFormPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [publishedSlug, setPublishedSlug] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState('');
   const [toolId, setToolId] = useState('');
@@ -117,13 +118,14 @@ export default function ToolFormPage() {
         .update(payload)
         .eq('id', toolId);
       if (err) { setError(err.message); setSaving(false); return; }
+      setSaving(false);
+      navigate(`/tools/${newSlug}`);
     } else {
       const { error: err } = await supabase.from('tools').insert(payload);
       if (err) { setError(err.message); setSaving(false); return; }
+      setSaving(false);
+      setPublishedSlug(newSlug);
     }
-
-    setSaving(false);
-    navigate(`/tools/${newSlug}`);
   };
 
   const handleDelete = async () => {
@@ -143,6 +145,58 @@ export default function ToolFormPage() {
               <div key={i} className="h-12 bg-surface-800 rounded" />
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (publishedSlug) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-24">
+        <div className="glass-card p-8 sm:p-10 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-5">
+            <CheckCircle className="w-7 h-7 text-brand-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Tu herramienta ha sido publicada</h1>
+          <p className="text-surface-400 mb-8">
+            Ya aparece en el directorio. Ahora puedes potenciar su visibilidad con un plan Boost.
+          </p>
+
+          <div className="glass-card p-6 mb-6 text-left relative overflow-hidden border-brand-500/20">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 via-transparent to-emerald-500/5" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-4">
+                <Rocket className="w-5 h-5 text-brand-400" />
+                <span className="text-sm font-semibold text-brand-400 uppercase tracking-wide">Plan Boost</span>
+              </div>
+              <h2 className="text-lg font-bold text-white mb-3">Llega antes que tu competencia</h2>
+              <ul className="space-y-2.5 mb-6">
+                {[
+                  { icon: TrendingUp, text: 'Aparece primero en todos los listados' },
+                  { icon: Star, text: 'Badge "Boosted" destacado en tu tarjeta' },
+                  { icon: Rocket, text: 'Incluido en la sección Featured de la home' },
+                ].map(({ icon: Icon, text }) => (
+                  <li key={text} className="flex items-center gap-3 text-sm text-surface-300">
+                    <div className="w-5 h-5 rounded-full bg-brand-500/15 border border-brand-500/25 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-3 h-3 text-brand-400" />
+                    </div>
+                    {text}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/pricing" className="btn-primary w-full justify-center">
+                Ver planes Boost
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          <Link
+            to={`/tools/${publishedSlug}`}
+            className="text-sm text-surface-500 hover:text-surface-300 transition-colors"
+          >
+            No gracias, ver mi herramienta
+          </Link>
         </div>
       </div>
     );
@@ -276,6 +330,16 @@ export default function ToolFormPage() {
             <label className="block text-sm font-medium text-surface-300 mb-1.5">Tags (comma separated)</label>
             <input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="input-field" placeholder="ai, chatbot, productivity" />
           </div>
+
+          {!isEdit && (
+            <div className="p-4 rounded-xl bg-brand-500/8 border border-brand-500/20 flex items-start gap-3">
+              <Rocket className="w-4 h-4 text-brand-400 mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">Potencia tu herramienta tras publicarla</p>
+                <p className="text-xs text-surface-400 mt-0.5">Con Boost apareceras primero en todos los listados y tendras un badge destacado.</p>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">{error}</div>

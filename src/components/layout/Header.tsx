@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Zap, Menu, X, User, LogOut, Heart, Settings } from 'lucide-react';
+import { Zap, Menu, X, User, LogOut, Heart, Settings, Rocket, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
@@ -21,7 +21,23 @@ export default function Header() {
     location.pathname === href || location.pathname.startsWith(href + '/');
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800/50">
+    <header className="fixed top-0 left-0 right-0 z-50">
+      <Link
+        to="/pricing"
+        className="block w-full bg-gradient-to-r from-brand-600 via-brand-500 to-emerald-500 hover:from-brand-500 hover:via-brand-400 hover:to-emerald-400 transition-all duration-300 group"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-center">
+          <Rocket className="w-3.5 h-3.5 text-white/90 flex-shrink-0" />
+          <p className="text-xs sm:text-sm font-medium text-white">
+            <span className="font-semibold">Llega antes que tu competencia</span>
+            <span className="hidden sm:inline text-white/85"> — Potencia tu herramienta y aparece primero en todos los listados.</span>
+          </p>
+          <span className="hidden sm:flex items-center gap-1 text-xs font-semibold text-white/90 group-hover:text-white transition-colors flex-shrink-0">
+            Ver planes <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </span>
+        </div>
+      </Link>
+      <div className="bg-surface-950/80 backdrop-blur-xl border-b border-surface-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
@@ -132,7 +148,7 @@ export default function Header() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-surface-800/50 bg-surface-950/95 backdrop-blur-xl">
+        <div className="md:hidden border-t border-surface-800/50 bg-surface-950/95 backdrop-blur-xl border-b border-surface-800/50">
           <div className="px-4 py-3 space-y-1">
             {navItems.map((item) => (
               <Link
@@ -169,6 +185,7 @@ export default function Header() {
           </div>
         </div>
       )}
+      </div>
     </header>
   );
 }
