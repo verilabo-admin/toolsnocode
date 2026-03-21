@@ -18,9 +18,16 @@ import AuthPage from './pages/AuthPage';
 import FavoritesPage from './pages/FavoritesPage';
 import AccountPage from './pages/AccountPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import CookiePolicyPage from './pages/CookiePolicyPage';
+import { AuthProvider } from './components/auth/AuthProvider';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { Header } from './components/layout/Header';
 import NewsPage from './pages/NewsPage';
+import { LoginPage } from './pages/LoginPage';
+import { SignupPage } from './pages/SignupPage';
+import { PricingPage } from './pages/PricingPage';
+import { SuccessPage } from './pages/SuccessPage';
 
 export default function App() {
   return (
@@ -48,12 +55,34 @@ export default function App() {
             <Route path="projects/new" element={<ProjectFormPage />} />
             <Route path="projects/:slug/edit" element={<ProjectFormPage />} />
             <Route path="projects/:slug" element={<ProjectDetailPage />} />
-            <Route path="news" element={<NewsPage />} />
-            <Route path="legal/privacy" element={<PrivacyPolicyPage />} />
-            <Route path="legal/terms" element={<TermsOfServicePage />} />
-            <Route path="legal/cookies" element={<CookiePolicyPage />} />
-          </Route>
-        </Routes>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Header />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route 
+                path="/pricing" 
+                element={
+                  <ProtectedRoute>
+                    <PricingPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/success" 
+                element={
+                  <ProtectedRoute>
+                    <SuccessPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </Router>
       </AuthProvider>
     </BrowserRouter>
   );
