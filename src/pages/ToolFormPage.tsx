@@ -157,9 +157,9 @@ export default function ToolFormPage() {
           <div className="w-14 h-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-5">
             <CheckCircle className="w-7 h-7 text-brand-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Tu herramienta ha sido publicada</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Your tool has been published</h1>
           <p className="text-surface-400 mb-8">
-            Ya aparece en el directorio. Ahora puedes potenciar su visibilidad con un plan Boost.
+            It's now live in the directory. Boost its visibility to get ahead of the competition.
           </p>
 
           <div className="glass-card p-6 mb-6 text-left relative overflow-hidden border-brand-500/20">
@@ -167,14 +167,14 @@ export default function ToolFormPage() {
             <div className="relative">
               <div className="flex items-center gap-2 mb-4">
                 <Rocket className="w-5 h-5 text-brand-400" />
-                <span className="text-sm font-semibold text-brand-400 uppercase tracking-wide">Plan Boost</span>
+                <span className="text-sm font-semibold text-brand-400 uppercase tracking-wide">Boost Plan</span>
               </div>
-              <h2 className="text-lg font-bold text-white mb-3">Llega antes que tu competencia</h2>
+              <h2 className="text-lg font-bold text-white mb-3">Get ahead of your competition</h2>
               <ul className="space-y-2.5 mb-6">
                 {[
-                  { icon: TrendingUp, text: 'Aparece primero en todos los listados' },
-                  { icon: Star, text: 'Badge "Boosted" destacado en tu tarjeta' },
-                  { icon: Rocket, text: 'Incluido en la sección Featured de la home' },
+                  { icon: TrendingUp, text: 'Appear first in every listing' },
+                  { icon: Star, text: 'Highlighted "Boosted" badge on your card' },
+                  { icon: Rocket, text: 'Featured in the homepage spotlight section' },
                 ].map(({ icon: Icon, text }) => (
                   <li key={text} className="flex items-center gap-3 text-sm text-surface-300">
                     <div className="w-5 h-5 rounded-full bg-brand-500/15 border border-brand-500/25 flex items-center justify-center flex-shrink-0">
@@ -185,7 +185,7 @@ export default function ToolFormPage() {
                 ))}
               </ul>
               <Link to="/pricing" className="btn-primary w-full justify-center">
-                Ver planes Boost
+                See Boost plans
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -195,7 +195,7 @@ export default function ToolFormPage() {
             to={`/tools/${publishedSlug}`}
             className="text-sm text-surface-500 hover:text-surface-300 transition-colors"
           >
-            No gracias, ver mi herramienta
+            No thanks, view my tool
           </Link>
         </div>
       </div>
@@ -335,8 +335,8 @@ export default function ToolFormPage() {
             <div className="p-4 rounded-xl bg-brand-500/8 border border-brand-500/20 flex items-start gap-3">
               <Rocket className="w-4 h-4 text-brand-400 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">Potencia tu herramienta tras publicarla</p>
-                <p className="text-xs text-surface-400 mt-0.5">Con Boost apareceras primero en todos los listados y tendras un badge destacado.</p>
+                <p className="text-sm font-semibold text-white">Boost your tool after publishing</p>
+                <p className="text-xs text-surface-400 mt-0.5">With Boost you'll appear first in every listing and get a highlighted badge on your card.</p>
               </div>
             </div>
           )}
