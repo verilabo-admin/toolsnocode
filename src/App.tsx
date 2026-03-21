@@ -55,6 +55,11 @@ export default function App() {
             <Route path="projects/new" element={<ProjectFormPage />} />
             <Route path="projects/:slug/edit" element={<ProjectFormPage />} />
             <Route path="projects/:slug" element={<ProjectDetailPage />} />
+            <Route path="pricing" element={<PricingPage />} />
+            <Route path="success" element={<SuccessPage />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
       <AuthProvider>
         <Router>
           <div className="min-h-screen bg-gray-50">
@@ -86,7 +91,4 @@ export default function App() {
       </AuthProvider>
     </BrowserRouter>
   );
-}
-
-  )
 }
