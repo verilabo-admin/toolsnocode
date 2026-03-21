@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Project, Tool } from '../types';
@@ -8,10 +8,16 @@ import ProjectCard from '../components/ui/ProjectCard';
 import SearchBar from '../components/ui/SearchBar';
 import { useSEO } from '../hooks/useSEO';
 
+const PAGE_SIZE = 24;
+
 export default function ProjectsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState<(Project & { tools: Tool[] })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState<number | null>(null);
+  const pageRef = useRef(0);
   const { user } = useAuth();
 
   useSEO({
@@ -22,37 +28,55 @@ export default function ProjectsPage() {
 
   const search = searchParams.get('q') || '';
 
+  function buildQuery(from: number, to: number) {
+    let query = supabase
+      .from('projects')
+      .select('*, project_tools(tool:tools(*))', { count: 'exact' })
+      .order('upvotes', { ascending: false });
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,author_name.ilike.%${search}%`);
+    }
+
+    return query.range(from, to);
+  }
+
+  function mapProjects(data: any[]) {
+    return data.map((p: any) => ({
+      ...p,
+      tools: p.project_tools?.map((pt: any) => pt.tool).filter(Boolean) || [],
+    }));
+  }
+
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const { data } = await supabase
-        .from('projects')
-        .select('*, project_tools(tool:tools(*))')
-        .order('upvotes', { ascending: false })
-        .limit(100);
-
-      if (data) {
-        const mapped = data.map((p: any) => ({
-          ...p,
-          tools: p.project_tools?.map((pt: any) => pt.tool).filter(Boolean) || [],
-        }));
-        setProjects(mapped);
-      }
+      pageRef.current = 0;
+      const { data, count } = await buildQuery(0, PAGE_SIZE - 1);
+      setProjects(data ? mapProjects(data) : []);
+      setTotal(count ?? null);
+      setHasMore((data?.length ?? 0) === PAGE_SIZE);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [search]);
 
-  const filteredProjects = useMemo(() => {
-    if (!search) return projects;
-    const q = search.toLowerCase();
-    return projects.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.author_name.toLowerCase().includes(q)
-    );
-  }, [projects, search]);
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const from = nextPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data } = await buildQuery(from, to);
+    if (data && data.length > 0) {
+      setProjects((prev) => [...prev, ...mapProjects(data)]);
+      pageRef.current = nextPage;
+      setHasMore(data.length === PAGE_SIZE);
+    } else {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  }
 
   function updateSearch(value: string) {
     const params = new URLSearchParams(searchParams);
@@ -100,7 +124,7 @@ export default function ProjectsPage() {
             </div>
           ))}
         </div>
-      ) : filteredProjects.length === 0 ? (
+      ) : projects.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-surface-400 text-lg mb-2">No projects found</p>
           <p className="text-surface-500 text-sm mb-6">Try adjusting your search.</p>
@@ -114,13 +138,39 @@ export default function ProjectsPage() {
       ) : (
         <>
           <p className="text-sm text-surface-500 mb-4">
-            {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''} found
+            {total !== null ? (
+              <>Showing {projects.length} of {total} project{total !== 1 ? 's' : ''}</>
+            ) : (
+              <>{projects.length} project{projects.length !== 1 ? 's' : ''} found</>
+            )}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProjects.map((project) => (
+            {projects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>
+
+          {hasMore && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="btn-secondary text-sm min-w-[160px]"
+              >
+                {loadingMore ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                ) : (
+                  'Load more'
+                )}
+              </button>
+            </div>
+          )}
+
+          {!hasMore && projects.length > PAGE_SIZE && (
+            <p className="text-center text-sm text-surface-600 mt-10">
+              All {projects.length} projects loaded
+            </p>
+          )}
         </>
       )}
     </div>

@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Expert } from '../types';
@@ -8,10 +8,16 @@ import ExpertCard from '../components/ui/ExpertCard';
 import SearchBar from '../components/ui/SearchBar';
 import { useSEO } from '../hooks/useSEO';
 
+const PAGE_SIZE = 24;
+
 export default function ExpertsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [experts, setExperts] = useState<Expert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState<number | null>(null);
+  const pageRef = useRef(0);
   const { user } = useAuth();
 
   useSEO({
@@ -22,31 +28,48 @@ export default function ExpertsPage() {
 
   const search = searchParams.get('q') || '';
 
+  function buildQuery(from: number, to: number) {
+    let query = supabase
+      .from('experts')
+      .select('*', { count: 'exact' })
+      .order('rating', { ascending: false });
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,bio.ilike.%${search}%,country.ilike.%${search}%`);
+    }
+
+    return query.range(from, to);
+  }
+
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const { data } = await supabase
-        .from('experts')
-        .select('*')
-        .order('rating', { ascending: false })
-        .limit(100);
-
-      if (data) setExperts(data);
+      pageRef.current = 0;
+      const { data, count } = await buildQuery(0, PAGE_SIZE - 1);
+      setExperts(data || []);
+      setTotal(count ?? null);
+      setHasMore((data?.length ?? 0) === PAGE_SIZE);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [search]);
 
-  const filteredExperts = useMemo(() => {
-    if (!search) return experts;
-    const q = search.toLowerCase();
-    return experts.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        e.bio.toLowerCase().includes(q) ||
-        e.country.toLowerCase().includes(q)
-    );
-  }, [experts, search]);
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const from = nextPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data } = await buildQuery(from, to);
+    if (data && data.length > 0) {
+      setExperts((prev) => [...prev, ...data]);
+      pageRef.current = nextPage;
+      setHasMore(data.length === PAGE_SIZE);
+    } else {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  }
 
   function updateSearch(value: string) {
     const params = new URLSearchParams(searchParams);
@@ -97,7 +120,7 @@ export default function ExpertsPage() {
             </div>
           ))}
         </div>
-      ) : filteredExperts.length === 0 ? (
+      ) : experts.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-surface-400 text-lg mb-2">No experts found</p>
           <p className="text-surface-500 text-sm mb-6">Try adjusting your search.</p>
@@ -111,13 +134,39 @@ export default function ExpertsPage() {
       ) : (
         <>
           <p className="text-sm text-surface-500 mb-4">
-            {filteredExperts.length} expert{filteredExperts.length !== 1 ? 's' : ''} found
+            {total !== null ? (
+              <>Showing {experts.length} of {total} expert{total !== 1 ? 's' : ''}</>
+            ) : (
+              <>{experts.length} expert{experts.length !== 1 ? 's' : ''} found</>
+            )}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredExperts.map((expert) => (
+            {experts.map((expert) => (
               <ExpertCard key={expert.id} expert={expert} />
             ))}
           </div>
+
+          {hasMore && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="btn-secondary text-sm min-w-[160px]"
+              >
+                {loadingMore ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                ) : (
+                  'Load more'
+                )}
+              </button>
+            </div>
+          )}
+
+          {!hasMore && experts.length > PAGE_SIZE && (
+            <p className="text-center text-sm text-surface-600 mt-10">
+              All {experts.length} experts loaded
+            </p>
+          )}
         </>
       )}
     </div>

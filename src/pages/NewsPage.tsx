@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Newspaper, Search, SlidersHorizontal } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Newspaper, Search, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useSEO } from '../hooks/useSEO';
 import NewsCard from '../components/ui/NewsCard';
 import type { NewsArticle } from '../types';
 
 const CATEGORIES = ['All', 'AI Models', 'No-Code Tools', 'Industry', 'Research', 'Policy'];
+const PAGE_SIZE = 20;
 
 export default function NewsPage() {
   useSEO({
@@ -16,47 +17,72 @@ export default function NewsPage() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [featured, setFeatured] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const pageRef = useRef(0);
+
+  function buildQuery(from: number, to: number) {
+    let query = supabase
+      .from('news')
+      .select('*', { count: 'exact' })
+      .order('published_at', { ascending: false });
+
+    if (activeCategory !== 'All') {
+      query = query.eq('category', activeCategory);
+    }
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%,source.ilike.%${search}%`);
+    }
+
+    return query.range(from, to);
+  }
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-
-      const { data: featuredData } = await supabase
-        .from('news')
-        .select('*')
-        .eq('is_featured', true)
-        .order('published_at', { ascending: false })
-        .limit(3);
-
-      setFeatured(featuredData ?? []);
-
-      const { data } = await supabase
-        .from('news')
-        .select('*')
-        .order('published_at', { ascending: false });
-
-      setArticles(data ?? []);
-      setLoading(false);
-    };
-    load();
+    supabase
+      .from('news')
+      .select('*')
+      .eq('is_featured', true)
+      .order('published_at', { ascending: false })
+      .limit(3)
+      .then(({ data }) => setFeatured(data ?? []));
   }, []);
 
-  const filtered = articles.filter((a) => {
-    const matchesCategory = activeCategory === 'All' || a.category === activeCategory;
-    const q = search.toLowerCase();
-    const matchesSearch =
-      !q ||
-      a.title.toLowerCase().includes(q) ||
-      a.summary.toLowerCase().includes(q) ||
-      a.source.toLowerCase().includes(q) ||
-      a.tags.some((t) => t.toLowerCase().includes(q));
-    return matchesCategory && matchesSearch;
-  });
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      pageRef.current = 0;
+      const { data, count } = await buildQuery(0, PAGE_SIZE - 1);
+      setArticles(data ?? []);
+      setTotal(count ?? null);
+      setHasMore((data?.length ?? 0) === PAGE_SIZE);
+      setLoading(false);
+    }
+    load();
+  }, [activeCategory, search]);
+
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const from = nextPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data } = await buildQuery(from, to);
+    if (data && data.length > 0) {
+      setArticles((prev) => [...prev, ...data]);
+      pageRef.current = nextPage;
+      setHasMore(data.length === PAGE_SIZE);
+    } else {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  }
 
   const featuredIds = new Set(featured.map((f) => f.id));
-  const rest = filtered.filter((a) => !featuredIds.has(a.id));
+  const displayArticles = articles.filter((a) => !featuredIds.has(a.id));
 
   return (
     <div className="min-h-screen bg-surface-950 py-12">
@@ -120,13 +146,43 @@ export default function NewsPage() {
               </div>
             </div>
 
-            {rest.length > 0 ? (
-              <div className="space-y-3">
-                {rest.map((article) => (
-                  <NewsCard key={article.id} article={article} />
-                ))}
-              </div>
-            ) : filtered.length === 0 ? (
+            {total !== null && (
+              <p className="text-sm text-surface-500 mb-4">
+                Showing {articles.length} of {total} article{total !== 1 ? 's' : ''}
+              </p>
+            )}
+
+            {displayArticles.length > 0 ? (
+              <>
+                <div className="space-y-3">
+                  {displayArticles.map((article) => (
+                    <NewsCard key={article.id} article={article} />
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div className="flex justify-center mt-10">
+                    <button
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="btn-secondary text-sm min-w-[160px]"
+                    >
+                      {loadingMore ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                      ) : (
+                        'Load more'
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {!hasMore && articles.length > PAGE_SIZE && (
+                  <p className="text-center text-sm text-surface-600 mt-10">
+                    All {articles.length} articles loaded
+                  </p>
+                )}
+              </>
+            ) : articles.length === 0 ? (
               <div className="text-center py-20">
                 <Newspaper className="w-10 h-10 text-surface-600 mx-auto mb-3" />
                 <p className="text-surface-400 text-sm">No articles match your search.</p>

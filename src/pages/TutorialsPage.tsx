@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Tutorial } from '../types';
@@ -8,6 +8,7 @@ import TutorialCard from '../components/ui/TutorialCard';
 import SearchBar from '../components/ui/SearchBar';
 import { useSEO } from '../hooks/useSEO';
 
+const PAGE_SIZE = 24;
 const contentTypes = ['all', 'video', 'guide', 'course', 'article'] as const;
 const levels = ['all', 'beginner', 'intermediate', 'advanced'] as const;
 
@@ -15,6 +16,10 @@ export default function TutorialsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState<number | null>(null);
+  const pageRef = useRef(0);
   const { user } = useAuth();
 
   useSEO({
@@ -27,35 +32,54 @@ export default function TutorialsPage() {
   const typeFilter = searchParams.get('type') || 'all';
   const levelFilter = searchParams.get('level') || 'all';
 
+  function buildQuery(from: number, to: number) {
+    let query = supabase
+      .from('tutorials')
+      .select('*, tool:tools(*)', { count: 'exact' })
+      .order('created_at', { ascending: false });
+
+    if (typeFilter !== 'all') {
+      query = query.eq('content_type', typeFilter);
+    }
+    if (levelFilter !== 'all') {
+      query = query.eq('difficulty_level', levelFilter);
+    }
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,author_name.ilike.%${search}%`);
+    }
+
+    return query.range(from, to);
+  }
+
   useEffect(() => {
     async function load() {
       setLoading(true);
-      let query = supabase.from('tutorials').select('*, tool:tools(*)').order('created_at', { ascending: false }).limit(100);
-
-      if (typeFilter !== 'all') {
-        query = query.eq('content_type', typeFilter);
-      }
-      if (levelFilter !== 'all') {
-        query = query.eq('difficulty_level', levelFilter);
-      }
-
-      const { data } = await query;
-      if (data) setTutorials(data);
+      pageRef.current = 0;
+      const { data, count } = await buildQuery(0, PAGE_SIZE - 1);
+      setTutorials(data || []);
+      setTotal(count ?? null);
+      setHasMore((data?.length ?? 0) === PAGE_SIZE);
       setLoading(false);
     }
     load();
-  }, [typeFilter, levelFilter]);
+  }, [typeFilter, levelFilter, search]);
 
-  const filteredTutorials = useMemo(() => {
-    if (!search) return tutorials;
-    const q = search.toLowerCase();
-    return tutorials.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q) ||
-        t.author_name.toLowerCase().includes(q)
-    );
-  }, [tutorials, search]);
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const from = nextPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data } = await buildQuery(from, to);
+    if (data && data.length > 0) {
+      setTutorials((prev) => [...prev, ...data]);
+      pageRef.current = nextPage;
+      setHasMore(data.length === PAGE_SIZE);
+    } else {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  }
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams);
@@ -124,7 +148,7 @@ export default function TutorialsPage() {
             </div>
           ))}
         </div>
-      ) : filteredTutorials.length === 0 ? (
+      ) : tutorials.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-surface-400 text-lg mb-2">No tutorials found</p>
           <p className="text-surface-500 text-sm mb-6">Try adjusting your search or filters.</p>
@@ -138,13 +162,39 @@ export default function TutorialsPage() {
       ) : (
         <>
           <p className="text-sm text-surface-500 mb-4">
-            {filteredTutorials.length} tutorial{filteredTutorials.length !== 1 ? 's' : ''} found
+            {total !== null ? (
+              <>Showing {tutorials.length} of {total} tutorial{total !== 1 ? 's' : ''}</>
+            ) : (
+              <>{tutorials.length} tutorial{tutorials.length !== 1 ? 's' : ''} found</>
+            )}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTutorials.map((tutorial) => (
+            {tutorials.map((tutorial) => (
               <TutorialCard key={tutorial.id} tutorial={tutorial} />
             ))}
           </div>
+
+          {hasMore && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="btn-secondary text-sm min-w-[160px]"
+              >
+                {loadingMore ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                ) : (
+                  'Load more'
+                )}
+              </button>
+            </div>
+          )}
+
+          {!hasMore && tutorials.length > PAGE_SIZE && (
+            <p className="text-center text-sm text-surface-600 mt-10">
+              All {tutorials.length} tutorials loaded
+            </p>
+          )}
         </>
       )}
     </div>

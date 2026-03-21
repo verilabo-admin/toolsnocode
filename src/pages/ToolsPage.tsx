@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { SlidersHorizontal, X, Plus } from 'lucide-react';
+import { SlidersHorizontal, X, Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Tool, Category } from '../types';
@@ -8,6 +8,7 @@ import ToolCard from '../components/ui/ToolCard';
 import SearchBar from '../components/ui/SearchBar';
 import { useSEO } from '../hooks/useSEO';
 
+const PAGE_SIZE = 24;
 const pricingOptions = ['all', 'free', 'freemium', 'paid', 'enterprise'] as const;
 const sortOptions = [
   { value: 'newest', label: 'Newest' },
@@ -22,7 +23,11 @@ export default function ToolsPage() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const pageRef = useRef(0);
   const { user } = useAuth();
 
   useSEO({
@@ -42,57 +47,70 @@ export default function ToolsPage() {
     });
   }, []);
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      let query = supabase.from('tools').select('*, category:categories(*)');
+  const buildQuery = useCallback((from: number, to: number) => {
+    let query = supabase.from('tools').select('*, category:categories(*)', { count: 'exact' });
 
-      if (pricingFilter !== 'all') {
-        query = query.eq('pricing', pricingFilter);
-      }
-
-      if (sortBy === 'trending') {
-        query = query.eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false });
-      } else if (sortBy === 'featured') {
-        query = query.or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false });
-      } else if (sortBy === 'rating') {
-        query = query.order('is_boosted', { ascending: false }).order('rating', { ascending: false });
-      } else if (sortBy === 'upvotes') {
-        query = query.order('is_boosted', { ascending: false }).order('upvotes', { ascending: false });
-      } else {
-        query = query.order('is_boosted', { ascending: false }).order('created_at', { ascending: false });
-      }
-
-      query = query.limit(100);
-      const { data } = await query;
-      setTools(data || []);
-      setLoading(false);
+    if (pricingFilter !== 'all') {
+      query = query.eq('pricing', pricingFilter);
     }
-    load();
-  }, [pricingFilter, sortBy]);
-
-  const filteredTools = useMemo(() => {
-    let result = tools;
 
     if (categoryFilter !== 'all') {
       const matchingCat = categories.find((c) => c.slug === categoryFilter);
       if (matchingCat) {
-        result = result.filter((t) => t.category_id === matchingCat.id);
+        query = query.eq('category_id', matchingCat.id);
       }
     }
 
     if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          t.tagline.toLowerCase().includes(q) ||
-          t.tags.some((tag) => tag.toLowerCase().includes(q))
-      );
+      query = query.or(`name.ilike.%${search}%,tagline.ilike.%${search}%`);
     }
 
-    return result;
-  }, [tools, categoryFilter, search, categories]);
+    if (sortBy === 'trending') {
+      query = query.eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false });
+    } else if (sortBy === 'featured') {
+      query = query.or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false });
+    } else if (sortBy === 'rating') {
+      query = query.order('is_boosted', { ascending: false }).order('rating', { ascending: false });
+    } else if (sortBy === 'upvotes') {
+      query = query.order('is_boosted', { ascending: false }).order('upvotes', { ascending: false });
+    } else {
+      query = query.order('is_boosted', { ascending: false }).order('created_at', { ascending: false });
+    }
+
+    return query.range(from, to);
+  }, [pricingFilter, categoryFilter, sortBy, search, categories]);
+
+  useEffect(() => {
+    if (categories.length === 0 && categoryFilter !== 'all') return;
+
+    async function load() {
+      setLoading(true);
+      pageRef.current = 0;
+      const { data, count } = await buildQuery(0, PAGE_SIZE - 1);
+      setTools(data || []);
+      setTotal(count ?? null);
+      setHasMore((data?.length ?? 0) === PAGE_SIZE);
+      setLoading(false);
+    }
+    load();
+  }, [pricingFilter, sortBy, categoryFilter, search, categories]);
+
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const from = nextPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data } = await buildQuery(from, to);
+    if (data && data.length > 0) {
+      setTools((prev) => [...prev, ...data]);
+      pageRef.current = nextPage;
+      setHasMore(data.length === PAGE_SIZE);
+    } else {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  }
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams);
@@ -222,7 +240,7 @@ export default function ToolsPage() {
             </div>
           ))}
         </div>
-      ) : filteredTools.length === 0 ? (
+      ) : tools.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-surface-400 text-lg mb-2">No tools found</p>
           <p className="text-surface-500 text-sm mb-6">Try adjusting your search or filters.</p>
@@ -236,13 +254,39 @@ export default function ToolsPage() {
       ) : (
         <>
           <p className="text-sm text-surface-500 mb-4">
-            {filteredTools.length} tool{filteredTools.length !== 1 ? 's' : ''} found
+            {total !== null ? (
+              <>Showing {tools.length} of {total} tool{total !== 1 ? 's' : ''}</>
+            ) : (
+              <>{tools.length} tool{tools.length !== 1 ? 's' : ''} found</>
+            )}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTools.map((tool) => (
+            {tools.map((tool) => (
               <ToolCard key={tool.id} tool={tool} />
             ))}
           </div>
+
+          {hasMore && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="btn-secondary text-sm min-w-[160px]"
+              >
+                {loadingMore ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                ) : (
+                  'Load more'
+                )}
+              </button>
+            </div>
+          )}
+
+          {!hasMore && tools.length > PAGE_SIZE && (
+            <p className="text-center text-sm text-surface-600 mt-10">
+              All {tools.length} tools loaded
+            </p>
+          )}
         </>
       )}
     </div>
