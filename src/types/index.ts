@@ -32,6 +32,9 @@ export interface Tool {
   updated_at: string;
   user_id?: string;
   category?: Category;
+  verification_token?: string | null;
+  is_verified?: boolean;
+  verified_at?: string | null;
 }
 
 export interface Expert {

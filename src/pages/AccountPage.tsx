@@ -13,6 +13,7 @@ import ToolCard from '../components/ui/ToolCard';
 import ExpertCard from '../components/ui/ExpertCard';
 import TutorialCard from '../components/ui/TutorialCard';
 import ProjectCard from '../components/ui/ProjectCard';
+import VerifyToolButton from '../components/ui/VerifyToolButton';
 
 type TabKey = 'profile' | 'tools' | 'experts' | 'tutorials' | 'projects' | 'claims';
 
@@ -128,17 +129,34 @@ export default function AccountPage() {
           items={tools}
           emptyLabel="tools"
           createHref="/tools/new"
-          renderItem={(tool) => (
-            <div key={(tool as Tool).id} className="relative group">
-              <ToolCard tool={tool as Tool} />
-              <Link
-                to={`/tools/${(tool as Tool).slug}/edit`}
-                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-surface-900/90 border border-surface-700 text-surface-400 hover:text-white transition-all"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          )}
+          renderItem={(tool) => {
+            const t = tool as Tool;
+            return (
+              <div key={t.id} className="flex flex-col gap-2">
+                <div className="relative group">
+                  <ToolCard tool={t} />
+                  <Link
+                    to={`/tools/${t.slug}/edit`}
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-surface-900/90 border border-surface-700 text-surface-400 hover:text-white transition-all"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+                {t.website && !t.is_verified && (
+                  <VerifyToolButton
+                    toolId={t.id}
+                    toolName={t.name}
+                    toolWebsite={t.website}
+                    initialToken={t.verification_token}
+                    initialVerified={t.is_verified ?? false}
+                    onVerified={() => setTools((prev) =>
+                      prev.map((x) => x.id === t.id ? { ...x, is_verified: true } : x)
+                    )}
+                  />
+                )}
+              </div>
+            );
+          }}
         />
       )}
       {activeTab === 'experts' && (

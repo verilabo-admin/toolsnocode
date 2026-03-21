@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Star, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, Star, TrendingUp, ShieldCheck } from 'lucide-react';
 import type { Tool } from '../../types';
 import UpvoteButton from './UpvoteButton';
 
@@ -35,6 +35,9 @@ export default function ToolCard({ tool }: ToolCardProps) {
             </h3>
             {tool.is_trending && (
               <TrendingUp className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+            )}
+            {tool.is_verified && (
+              <ShieldCheck className="w-3.5 h-3.5 text-sky-400 flex-shrink-0" title="Verified" />
             )}
             <ArrowUpRight className="w-4 h-4 text-surface-600 group-hover:text-brand-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0" />
           </div>

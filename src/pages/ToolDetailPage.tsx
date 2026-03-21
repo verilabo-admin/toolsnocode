@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, ExternalLink, Star, TrendingUp, Globe,
-  Tag, BarChart3, Clock, BookOpen, Users, Rocket, Pencil,
+  Tag, BarChart3, Clock, BookOpen, Users, Rocket, Pencil, ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
 import ClaimButton from '../components/ui/ClaimButton';
 import UpvoteButton from '../components/ui/UpvoteButton';
+import VerifyToolButton from '../components/ui/VerifyToolButton';
 import type { Tool, Tutorial, Expert, Project } from '../types';
 import { useSEO } from '../hooks/useSEO';
 
@@ -182,6 +183,11 @@ export default function ToolDetailPage() {
               {tool.is_featured && (
                 <span className="badge-green">Featured</span>
               )}
+              {tool.is_verified && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-sky-500/15 text-sky-400 border border-sky-500/20">
+                  <ShieldCheck className="w-3 h-3" /> Verified
+                </span>
+              )}
             </div>
 
             <p className="text-lg text-surface-300 mb-4">{tool.tagline}</p>
@@ -216,6 +222,16 @@ export default function ToolDetailPage() {
                   <Pencil className="w-4 h-4" />
                   Edit
                 </Link>
+              )}
+              {user?.id === tool.user_id && !tool.is_verified && tool.website && (
+                <VerifyToolButton
+                  toolId={tool.id}
+                  toolName={tool.name}
+                  toolWebsite={tool.website}
+                  initialToken={tool.verification_token}
+                  initialVerified={tool.is_verified ?? false}
+                  onVerified={() => setTool((prev) => prev ? { ...prev, is_verified: true } : prev)}
+                />
               )}
               <FavoriteButton
                 isFavorite={isFavorite('tools', tool.id)}
