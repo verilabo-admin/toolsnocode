@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, ExternalLink, Star, ChevronUp, TrendingUp, Globe,
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
 import type { Tool, Tutorial, Expert, Project } from '../types';
+import { useSEO } from '../hooks/useSEO';
 
 export default function ToolDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -78,6 +79,40 @@ export default function ToolDetailPage() {
     }
     load();
   }, [slug]);
+
+  const jsonLd = useMemo(() => {
+    if (!tool) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: tool.name,
+      description: tool.description || tool.tagline,
+      url: tool.website || `https://toolsnocode.com/tools/${tool.slug}`,
+      applicationCategory: tool.category?.name || 'WebApplication',
+      offers: {
+        '@type': 'Offer',
+        price: tool.pricing === 'free' ? '0' : undefined,
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/OnlineOnly',
+      },
+      aggregateRating: tool.rating > 0 ? {
+        '@type': 'AggregateRating',
+        ratingValue: tool.rating,
+        reviewCount: tool.review_count,
+        bestRating: 5,
+        worstRating: 1,
+      } : undefined,
+    };
+  }, [tool]);
+
+  useSEO({
+    title: tool ? `${tool.name} - ${tool.tagline}` : undefined,
+    description: tool ? tool.description?.slice(0, 160) || tool.tagline : undefined,
+    image: tool?.logo_url || tool?.screenshot_urls?.[0],
+    url: tool ? `/tools/${tool.slug}` : undefined,
+    type: 'website',
+    jsonLd,
+  });
 
   if (loading) {
     return (

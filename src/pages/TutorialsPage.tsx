@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Tutorial } from '../types';
 import TutorialCard from '../components/ui/TutorialCard';
 import SearchBar from '../components/ui/SearchBar';
+import { useSEO } from '../hooks/useSEO';
 
 const contentTypes = ['all', 'video', 'guide', 'course', 'article'] as const;
 const levels = ['all', 'beginner', 'intermediate', 'advanced'] as const;
@@ -15,6 +16,12 @@ export default function TutorialsPage() {
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+
+  useSEO({
+    title: 'No-Code & AI Tutorials',
+    description: 'Learn no-code and AI with step-by-step tutorials, video guides, and courses. Filter by tool, format, and difficulty level.',
+    url: '/tutorials',
+  });
 
   const search = searchParams.get('q') || '';
   const typeFilter = searchParams.get('type') || 'all';

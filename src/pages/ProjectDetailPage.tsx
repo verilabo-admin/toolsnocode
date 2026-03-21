@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, ChevronUp, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
 import type { Project, Tool } from '../types';
+import { useSEO } from '../hooks/useSEO';
 
 export default function ProjectDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -42,6 +43,32 @@ export default function ProjectDetailPage() {
     }
     load();
   }, [slug]);
+
+  const jsonLd = useMemo(() => {
+    if (!project) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'CreativeWork',
+      name: project.title,
+      description: project.description?.slice(0, 200),
+      image: project.screenshot_url,
+      url: project.live_url || `https://toolsnocode.com/projects/${project.slug}`,
+      author: {
+        '@type': 'Person',
+        name: project.author_name,
+      },
+      datePublished: project.created_at,
+    };
+  }, [project]);
+
+  useSEO({
+    title: project ? `${project.title} - No-Code Project` : undefined,
+    description: project ? project.description?.slice(0, 160) : undefined,
+    image: project?.screenshot_url,
+    url: project ? `/projects/${project.slug}` : undefined,
+    type: 'article',
+    jsonLd,
+  });
 
   if (loading) {
     return (

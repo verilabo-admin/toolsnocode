@@ -6,12 +6,19 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Project, Tool } from '../types';
 import ProjectCard from '../components/ui/ProjectCard';
 import SearchBar from '../components/ui/SearchBar';
+import { useSEO } from '../hooks/useSEO';
 
 export default function ProjectsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState<(Project & { tools: Tool[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+
+  useSEO({
+    title: 'No-Code Projects Showcase',
+    description: 'Explore real projects built with no-code and AI tools. Get inspired, discover tech stacks, and showcase your own creations.',
+    url: '/projects',
+  });
 
   const search = searchParams.get('q') || '';
 

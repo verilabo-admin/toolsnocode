@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Star, MapPin, Globe, ExternalLink, DollarSign, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
 import type { Expert, Tool } from '../types';
+import { useSEO } from '../hooks/useSEO';
 
 export default function ExpertDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -46,6 +47,29 @@ export default function ExpertDetailPage() {
     }
     load();
   }, [slug]);
+
+  const jsonLd = useMemo(() => {
+    if (!expert) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: expert.name,
+      description: expert.bio?.slice(0, 200),
+      image: expert.avatar_url,
+      url: expert.portfolio_url || `https://toolsnocode.com/experts/${expert.slug}`,
+      knowsAbout: tools.map((t) => t.name),
+      ...(expert.country ? { addressCountry: expert.country } : {}),
+    };
+  }, [expert, tools]);
+
+  useSEO({
+    title: expert ? `${expert.name} - No-Code Expert` : undefined,
+    description: expert ? expert.bio?.slice(0, 160) : undefined,
+    image: expert?.avatar_url,
+    url: expert ? `/experts/${expert.slug}` : undefined,
+    type: 'profile',
+    jsonLd,
+  });
 
   if (loading) {
     return (

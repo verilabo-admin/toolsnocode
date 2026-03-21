@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
 import CategoryCard from '../components/ui/CategoryCard';
+import { useSEO } from '../hooks/useSEO';
 
 export default function HomePage() {
   const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
@@ -12,6 +13,11 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState({ tools: 0, experts: 0, tutorials: 0, projects: 0 });
   const [searchQuery, setSearchQuery] = useState('');
+
+  useSEO({
+    url: '/',
+    type: 'website',
+  });
 
   useEffect(() => {
     async function load() {

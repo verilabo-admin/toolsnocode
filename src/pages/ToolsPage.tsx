@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
 import SearchBar from '../components/ui/SearchBar';
+import { useSEO } from '../hooks/useSEO';
 
 const pricingOptions = ['all', 'free', 'freemium', 'paid', 'enterprise'] as const;
 const sortOptions = [
@@ -23,6 +24,12 @@ export default function ToolsPage() {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const { user } = useAuth();
+
+  useSEO({
+    title: 'AI & No-Code Tools',
+    description: 'Browse and compare the best AI and no-code tools. Filter by category, pricing, and difficulty level to find your perfect stack.',
+    url: '/tools',
+  });
 
   const search = searchParams.get('q') || '';
   const categoryFilter = searchParams.get('category') || 'all';

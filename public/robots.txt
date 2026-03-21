@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Disallow: /auth
+Disallow: /favorites
+Disallow: /tools/new
+Disallow: /experts/new
+Disallow: /tutorials/new
+Disallow: /projects/new
+Disallow: /*/edit
+
+Sitemap: https://toolsnocode.com/sitemap.xml

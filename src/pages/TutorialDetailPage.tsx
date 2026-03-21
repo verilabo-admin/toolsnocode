@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Clock, BookOpen, Video, FileText, GraduationCap,
@@ -11,6 +11,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
 import TutorialCard from '../components/ui/TutorialCard';
 import type { Tutorial, Tool } from '../types';
+import { useSEO } from '../hooks/useSEO';
 
 const typeIcons: Record<string, typeof Video> = {
   video: Video,
@@ -132,6 +133,32 @@ export default function TutorialDetailPage() {
     }
     load();
   }, [slug]);
+
+  const jsonLd = useMemo(() => {
+    if (!tutorial) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': tutorial.content_type === 'video' ? 'VideoObject' : 'Article',
+      name: tutorial.title,
+      description: tutorial.description?.slice(0, 200),
+      ...(tutorial.thumbnail_url ? { thumbnailUrl: tutorial.thumbnail_url } : {}),
+      author: {
+        '@type': 'Person',
+        name: tutorial.author_name || 'ToolsNoCode',
+      },
+      datePublished: tutorial.created_at,
+      ...(tutorial.video_url ? { contentUrl: tutorial.video_url } : {}),
+    };
+  }, [tutorial]);
+
+  useSEO({
+    title: tutorial ? tutorial.title : undefined,
+    description: tutorial ? tutorial.description?.slice(0, 160) : undefined,
+    image: tutorial?.thumbnail_url,
+    url: tutorial ? `/tutorials/${tutorial.slug}` : undefined,
+    type: 'article',
+    jsonLd,
+  });
 
   if (loading) {
     return (

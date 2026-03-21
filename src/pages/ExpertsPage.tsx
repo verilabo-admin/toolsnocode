@@ -6,12 +6,19 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Expert } from '../types';
 import ExpertCard from '../components/ui/ExpertCard';
 import SearchBar from '../components/ui/SearchBar';
+import { useSEO } from '../hooks/useSEO';
 
 export default function ExpertsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [experts, setExperts] = useState<Expert[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+
+  useSEO({
+    title: 'No-Code & AI Experts',
+    description: 'Find and connect with top no-code and AI experts. Browse expert profiles, tools they use, and hire them for your next project.',
+    url: '/experts',
+  });
 
   const search = searchParams.get('q') || '';
 
