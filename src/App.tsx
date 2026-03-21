@@ -16,6 +16,9 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import ProjectFormPage from './pages/ProjectFormPage';
 import AuthPage from './pages/AuthPage';
 import FavoritesPage from './pages/FavoritesPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
 
 export default function App() {
   return (
@@ -42,6 +45,9 @@ export default function App() {
             <Route path="projects/new" element={<ProjectFormPage />} />
             <Route path="projects/:slug/edit" element={<ProjectFormPage />} />
             <Route path="projects/:slug" element={<ProjectDetailPage />} />
+            <Route path="legal/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="legal/terms" element={<TermsOfServicePage />} />
+            <Route path="legal/cookies" element={<CookiePolicyPage />} />
           </Route>
         </Routes>
       </AuthProvider>

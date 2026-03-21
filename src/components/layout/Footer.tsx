@@ -70,9 +70,17 @@ export default function Footer() {
           <p className="text-sm text-surface-600">
             {new Date().getFullYear()} ToolsNoCode. All rights reserved.
           </p>
-          <p className="text-sm text-surface-600">
-            Built for the AI Builder Economy
-          </p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <Link to="/legal/privacy" className="text-sm text-surface-600 hover:text-brand-400 transition-colors">
+              Política de Privacidad
+            </Link>
+            <Link to="/legal/terms" className="text-sm text-surface-600 hover:text-brand-400 transition-colors">
+              Términos de Servicio
+            </Link>
+            <Link to="/legal/cookies" className="text-sm text-surface-600 hover:text-brand-400 transition-colors">
+              Cookies
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
