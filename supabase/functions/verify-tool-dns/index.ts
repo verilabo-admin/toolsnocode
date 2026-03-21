@@ -63,8 +63,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (tool.user_id !== user.id) {
-      return new Response(JSON.stringify({ error: "Forbidden: you do not own this tool" }), {
+    const isOwner = tool.user_id === user.id;
+    const isUnclaimed = !tool.user_id;
+
+    if (!isOwner && !isUnclaimed) {
+      return new Response(JSON.stringify({ error: "Forbidden: this tool is already owned by someone else" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -97,7 +100,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "verify") {
-      if (tool.is_verified) {
+      if (tool.is_verified && isOwner) {
         return new Response(
           JSON.stringify({ success: true, already_verified: true }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -165,7 +168,11 @@ Deno.serve(async (req: Request) => {
       if (dnsSuccess) {
         await supabaseAdmin
           .from("tools")
-          .update({ is_verified: true, verified_at: new Date().toISOString() })
+          .update({
+            is_verified: true,
+            verified_at: new Date().toISOString(),
+            user_id: user.id,
+          })
           .eq("id", tool_id);
       }
 

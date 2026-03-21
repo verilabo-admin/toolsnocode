@@ -227,7 +227,7 @@ export default function ToolDetailPage() {
             </div>
 
             {!tool.user_id && (
-              <ClaimButton itemType="tools" itemId={tool.id} itemName={tool.name} onClaimed={handleClaimed} />
+              <ClaimButton itemType="tools" itemId={tool.id} itemName={tool.name} itemWebsite={tool.website} onClaimed={handleClaimed} />
             )}
 
             {user?.id === tool.user_id && !tool.is_verified && tool.website && (
