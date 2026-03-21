@@ -32,11 +32,11 @@ export default function App() {
     <Router>
       <AuthProvider>
         <Routes>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignupPage />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="auth" element={<AuthPage />} />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="signup" element={<SignupPage />} />
             <Route path="account" element={<AccountPage />} />
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="pricing" element={<PricingPage />} />
