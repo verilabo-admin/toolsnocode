@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ChevronUp, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import type { Project } from '../../types';
+import UpvoteButton from './UpvoteButton';
 
 interface ProjectCardProps {
   project: Project;
@@ -44,10 +45,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-surface-500">{project.author_name}</span>
-          <span className="flex items-center gap-1 text-xs text-surface-500">
-            <ChevronUp className="w-3 h-3" />
-            {project.upvotes}
-          </span>
+          <UpvoteButton itemType="projects" itemId={project.id} initialCount={project.upvotes} size="sm" />
         </div>
 
         {project.tools && project.tools.length > 0 && (

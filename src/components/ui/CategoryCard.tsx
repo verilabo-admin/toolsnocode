@@ -2,7 +2,10 @@ import { Link } from 'react-router-dom';
 import {
   Bot, Code2, TrendingUp, Layers, Cpu, Image, Video, Mic,
   Globe, Smartphone, Workflow, Database, Link2, Search as SearchIcon,
-  Mail, BarChart3, type LucideIcon,
+  Mail, BarChart3, PenLine, Share2, Palette, Microscope,
+  GraduationCap, Headphones, Target, Users, DollarSign,
+  Languages, Music, Heart, Scale, Home, ShoppingCart,
+  Gamepad2, Sparkles, Zap, type LucideIcon,
 } from 'lucide-react';
 import type { Category } from '../../types';
 
@@ -23,6 +26,25 @@ const iconMap: Record<string, LucideIcon> = {
   search: SearchIcon,
   mail: Mail,
   barchart: BarChart3,
+  penline: PenLine,
+  zap: Zap,
+  share2: Share2,
+  palette: Palette,
+  microscope: Microscope,
+  graduationcap: GraduationCap,
+  headphones: Headphones,
+  target: Target,
+  users: Users,
+  dollarSign: DollarSign,
+  dollarsign: DollarSign,
+  languages: Languages,
+  music: Music,
+  heart: Heart,
+  scale: Scale,
+  home: Home,
+  shoppingcart: ShoppingCart,
+  gamepad2: Gamepad2,
+  sparkles: Sparkles,
 };
 
 interface CategoryCardProps {
@@ -31,7 +53,7 @@ interface CategoryCardProps {
 }
 
 export default function CategoryCard({ category, toolCount }: CategoryCardProps) {
-  const Icon = iconMap[category.icon] || Layers;
+  const Icon = iconMap[category.icon] || iconMap[category.icon?.toLowerCase()] || Layers;
 
   return (
     <Link

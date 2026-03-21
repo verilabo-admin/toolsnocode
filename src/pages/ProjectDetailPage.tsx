@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, ChevronUp, Pencil } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
+import UpvoteButton from '../components/ui/UpvoteButton';
 import type { Project, Tool } from '../types';
 import { useSEO } from '../hooks/useSEO';
 
@@ -115,10 +116,7 @@ export default function ProjectDetailPage() {
           <span className="text-sm text-surface-400">
             By <span className="text-surface-200">{project.author_name}</span>
           </span>
-          <span className="flex items-center gap-1 text-sm text-surface-400">
-            <ChevronUp className="w-4 h-4" />
-            {project.upvotes} upvotes
-          </span>
+          <UpvoteButton itemType="projects" itemId={project.id} initialCount={project.upvotes} />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

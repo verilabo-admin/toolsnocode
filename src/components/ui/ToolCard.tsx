@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Star, TrendingUp, ChevronUp } from 'lucide-react';
+import { ArrowUpRight, Star, TrendingUp } from 'lucide-react';
 import type { Tool } from '../../types';
+import UpvoteButton from './UpvoteButton';
 
 const pricingColors: Record<string, string> = {
   free: 'bg-brand-500/15 text-brand-400 border-brand-500/20',
@@ -54,12 +55,7 @@ export default function ToolCard({ tool }: ToolCardProps) {
               </span>
             )}
 
-            {tool.upvotes > 0 && (
-              <span className="flex items-center gap-1 text-xs text-surface-500">
-                <ChevronUp className="w-3 h-3" />
-                {tool.upvotes}
-              </span>
-            )}
+            <UpvoteButton itemType="tools" itemId={tool.id} initialCount={tool.upvotes} size="sm" />
 
             {tool.tags.length > 0 && (
               <span className="badge-neutral">{tool.tags[0]}</span>

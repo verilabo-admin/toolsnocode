@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, ExternalLink, Star, ChevronUp, TrendingUp, Globe,
+  ArrowLeft, ExternalLink, Star, TrendingUp, Globe,
   Tag, BarChart3, Clock, BookOpen, Users, Rocket, Pencil,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import FavoriteButton from '../components/ui/FavoriteButton';
 import ClaimButton from '../components/ui/ClaimButton';
+import UpvoteButton from '../components/ui/UpvoteButton';
 import type { Tool, Tutorial, Expert, Project } from '../types';
 import { useSEO } from '../hooks/useSEO';
 
@@ -193,10 +194,7 @@ export default function ToolDetailPage() {
                   <span className="text-surface-500">({tool.review_count} reviews)</span>
                 </span>
               )}
-              <span className="flex items-center gap-1.5 text-sm text-surface-300">
-                <ChevronUp className="w-4 h-4" />
-                {tool.upvotes} upvotes
-              </span>
+              <UpvoteButton itemType="tools" itemId={tool.id} initialCount={tool.upvotes} />
               <span className={`text-sm font-medium capitalize ${pricingColor[tool.pricing] || ''}`}>
                 {tool.pricing}
               </span>
