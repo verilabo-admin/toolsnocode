@@ -39,35 +39,33 @@ export default function Header() {
       </Link>
       <div className="bg-surface-950/80 backdrop-blur-xl border-b border-surface-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-bold text-white">
-                Tools<span className="text-brand-400">NoCode</span>
-              </span>
-            </Link>
+        <div className="relative flex items-center justify-between h-16">
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
+              <Zap className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-lg font-bold text-white">
+              Tools<span className="text-brand-400">NoCode</span>
+            </span>
+          </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'text-brand-400 bg-brand-500/10'
-                      : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/50'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(item.href)
+                    ? 'text-brand-400 bg-brand-500/10'
+                    : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/50'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {user ? (
               <div className="relative">
                 <button
