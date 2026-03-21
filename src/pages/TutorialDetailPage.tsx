@@ -207,7 +207,7 @@ export default function TutorialDetailPage() {
                   {embedFailed ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                       <p className="text-white/70 text-sm text-center max-w-xs">
-                        Este video no permite reproducción en sitios externos.
+                        This video cannot be played on external sites.
                       </p>
                       <a
                         href={tutorial.video_url!}
@@ -216,7 +216,7 @@ export default function TutorialDetailPage() {
                         className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors duration-200 shadow-lg"
                       >
                         <ExternalLink className="w-4 h-4" />
-                        Ver en YouTube
+                        Watch on YouTube
                       </a>
                     </div>
                   ) : (

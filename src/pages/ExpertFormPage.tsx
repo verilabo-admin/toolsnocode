@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import type { Tool } from '../types';
 
 export default function ExpertFormPage() {
   const { slug } = useParams();
@@ -15,6 +16,8 @@ export default function ExpertFormPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [expertId, setExpertId] = useState('');
+  const [allTools, setAllTools] = useState<Tool[]>([]);
+  const [selectedToolIds, setSelectedToolIds] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     name: '',
@@ -27,11 +30,17 @@ export default function ExpertFormPage() {
   });
 
   useEffect(() => {
+    supabase.from('tools').select('id, name').order('name').then(({ data }) => {
+      setAllTools((data as Tool[]) ?? []);
+    });
+  }, []);
+
+  useEffect(() => {
     if (!slug) return;
     setLoading(true);
     supabase
       .from('experts')
-      .select('*')
+      .select('*, expert_tools(tool_id)')
       .eq('slug', slug)
       .maybeSingle()
       .then(({ data }) => {
@@ -47,6 +56,8 @@ export default function ExpertFormPage() {
           hourly_rate: data.hourly_rate?.toString() ?? '',
           portfolio_url: data.portfolio_url ?? '',
         });
+        const toolIds = ((data.expert_tools as { tool_id: string }[]) ?? []).map((et) => et.tool_id);
+        setSelectedToolIds(toolIds);
         setLoading(false);
       });
   }, [slug, user, navigate]);
@@ -55,6 +66,12 @@ export default function ExpertFormPage() {
 
   const generateSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  const toggleTool = (toolId: string) => {
+    setSelectedToolIds((prev) =>
+      prev.includes(toolId) ? prev.filter((id) => id !== toolId) : [...prev, toolId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,12 +93,22 @@ export default function ExpertFormPage() {
       user_id: user.id,
     };
 
+    let eid = expertId;
+
     if (isEdit) {
       const { error: err } = await supabase.from('experts').update(payload).eq('id', expertId);
       if (err) { setError(err.message); setSaving(false); return; }
     } else {
-      const { error: err } = await supabase.from('experts').insert(payload);
-      if (err) { setError(err.message); setSaving(false); return; }
+      const { data, error: err } = await supabase.from('experts').insert(payload).select('id').maybeSingle();
+      if (err || !data) { setError(err?.message ?? 'Error creating profile'); setSaving(false); return; }
+      eid = data.id;
+    }
+
+    await supabase.from('expert_tools').delete().eq('expert_id', eid);
+    if (selectedToolIds.length > 0) {
+      await supabase.from('expert_tools').insert(
+        selectedToolIds.map((tool_id) => ({ expert_id: eid, tool_id }))
+      );
     }
 
     setSaving(false);
@@ -162,6 +189,32 @@ export default function ExpertFormPage() {
             <div>
               <label className="block text-sm font-medium text-surface-300 mb-1.5">Languages (comma separated)</label>
               <input value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })} className="input-field" placeholder="English, Spanish" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Tools & Skills</label>
+            <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-surface-900/80 border border-surface-700/50 max-h-48 overflow-y-auto">
+              {allTools.map((tool) => {
+                const selected = selectedToolIds.includes(tool.id);
+                return (
+                  <button
+                    key={tool.id}
+                    type="button"
+                    onClick={() => toggleTool(tool.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      selected
+                        ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
+                        : 'bg-surface-800 text-surface-400 border border-surface-700 hover:text-surface-200'
+                    }`}
+                  >
+                    {tool.name}
+                  </button>
+                );
+              })}
+              {allTools.length === 0 && (
+                <span className="text-surface-500 text-sm">No tools available</span>
+              )}
             </div>
           </div>
 

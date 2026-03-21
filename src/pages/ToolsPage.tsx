@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { SlidersHorizontal, X, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
 import SearchBar from '../components/ui/SearchBar';
@@ -21,6 +22,7 @@ export default function ToolsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const { user } = useAuth();
 
   const search = searchParams.get('q') || '';
   const categoryFilter = searchParams.get('category') || 'all';
@@ -103,11 +105,19 @@ export default function ToolsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Tools Directory</h1>
-        <p className="text-surface-400">
-          Discover and compare the best AI and no-code tools for your projects.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Tools Directory</h1>
+          <p className="text-surface-400">
+            Discover and compare the best AI and no-code tools for your projects.
+          </p>
+        </div>
+        {user && (
+          <Link to="/tools/new" className="btn-primary text-sm shrink-0">
+            <Plus className="w-4 h-4" />
+            Add Tool
+          </Link>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -208,7 +218,13 @@ export default function ToolsPage() {
       ) : filteredTools.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-surface-400 text-lg mb-2">No tools found</p>
-          <p className="text-surface-500 text-sm">Try adjusting your search or filters.</p>
+          <p className="text-surface-500 text-sm mb-6">Try adjusting your search or filters.</p>
+          {user && (
+            <Link to="/tools/new" className="btn-primary text-sm inline-flex">
+              <Plus className="w-4 h-4" />
+              Add the first tool
+            </Link>
+          )}
         </div>
       ) : (
         <>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
+import { Save, Loader2, ArrowLeft, Trash2, Plus, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Category } from '../types';
@@ -17,6 +17,7 @@ export default function ToolFormPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState('');
   const [toolId, setToolId] = useState('');
+  const [screenshotUrls, setScreenshotUrls] = useState<string[]>(['']);
 
   const [form, setForm] = useState({
     name: '',
@@ -67,6 +68,8 @@ export default function ToolFormPage() {
           tags: (data.tags ?? []).join(', '),
           difficulty_level: data.difficulty_level ?? 'beginner',
         });
+        const urls: string[] = (data.screenshot_urls ?? []);
+        setScreenshotUrls(urls.length > 0 ? urls : ['']);
         setLoading(false);
       });
   }, [slug, user, navigate]);
@@ -89,6 +92,7 @@ export default function ToolFormPage() {
       .map((t) => t.trim())
       .filter(Boolean);
     const newSlug = generateSlug(form.name);
+    const screenshots = screenshotUrls.map((u) => u.trim()).filter(Boolean);
 
     const payload = {
       name: form.name,
@@ -97,6 +101,7 @@ export default function ToolFormPage() {
       description: form.description,
       website: form.website,
       logo_url: form.logo_url,
+      screenshot_urls: screenshots,
       category_id: form.category_id || null,
       pricing: form.pricing,
       pricing_details: form.pricing_details,
@@ -186,6 +191,44 @@ export default function ToolFormPage() {
             <div>
               <label className="block text-sm font-medium text-surface-300 mb-1.5">Logo URL</label>
               <input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} className="input-field" placeholder="https://..." />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium text-surface-300">Screenshots (URLs)</label>
+              <button
+                type="button"
+                onClick={() => setScreenshotUrls((prev) => [...prev, ''])}
+                className="flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              >
+                <Plus className="w-3 h-3" /> Add URL
+              </button>
+            </div>
+            <div className="space-y-2">
+              {screenshotUrls.map((url, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    value={url}
+                    onChange={(e) => {
+                      const next = [...screenshotUrls];
+                      next[i] = e.target.value;
+                      setScreenshotUrls(next);
+                    }}
+                    className="input-field flex-1"
+                    placeholder={`https://... (screenshot ${i + 1})`}
+                  />
+                  {screenshotUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setScreenshotUrls((prev) => prev.filter((_, j) => j !== i))}
+                      className="p-2 text-surface-500 hover:text-rose-400 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
