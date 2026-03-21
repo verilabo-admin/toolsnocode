@@ -35,6 +35,10 @@ export interface Tool {
   verification_token?: string | null;
   is_verified?: boolean;
   verified_at?: string | null;
+  is_boosted?: boolean;
+  boost_expires_at?: string | null;
+  video_url?: string;
+  boost_plan?: string;
 }
 
 export interface Expert {

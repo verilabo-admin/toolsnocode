@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Loader2, Rocket } from 'lucide-react';
 import { StripeProduct } from '../../stripe-config';
 import { supabase } from '../../lib/supabase';
 
@@ -12,13 +12,10 @@ export function SubscriptionCard({ product }: SubscriptionCardProps) {
 
   const handleSubscribe = async () => {
     setLoading(true);
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
+      if (!session) throw new Error('Not authenticated');
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
@@ -34,15 +31,10 @@ export function SubscriptionCard({ product }: SubscriptionCardProps) {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
-      }
+      if (!response.ok) throw new Error('Failed to create checkout session');
 
       const { url } = await response.json();
-      
-      if (url) {
-        window.location.href = url;
-      }
+      if (url) window.location.href = url;
     } catch (error) {
       console.error('Subscription error:', error);
     } finally {
@@ -50,44 +42,52 @@ export function SubscriptionCard({ product }: SubscriptionCardProps) {
     }
   };
 
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200">
-      <div className="text-center">
-        <h3 className="text-2xl font-bold text-gray-900 mb-4">{product.name}</h3>
-        <p className="text-gray-600 mb-6">{product.description}</p>
-        
-        <div className="mb-8">
-          <span className="text-4xl font-bold text-gray-900">$49.90</span>
-          <span className="text-gray-600">/month</span>
+    <div className="glass-card overflow-hidden">
+      <div className="bg-gradient-to-r from-brand-500/10 to-emerald-500/10 border-b border-surface-800/50 px-6 py-4">
+        <div className="flex items-center gap-2">
+          <Rocket className="w-5 h-5 text-brand-400" />
+          <span className="font-semibold text-white">{product.name}</span>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <p className="text-sm text-surface-500 mb-4">{product.description}</p>
+
+        <div className="mb-6">
+          <span className="text-3xl font-bold text-white">{formatPrice(product.price)}</span>
+          <span className="text-surface-500 ml-1">/month</span>
         </div>
 
-        <ul className="space-y-4 mb-8">
-          <li className="flex items-center">
-            <Check className="h-5 w-5 text-green-500 mr-3" />
-            <span className="text-gray-700">Access to premium features</span>
-          </li>
-          <li className="flex items-center">
-            <Check className="h-5 w-5 text-green-500 mr-3" />
-            <span className="text-gray-700">Priority support</span>
-          </li>
-          <li className="flex items-center">
-            <Check className="h-5 w-5 text-green-500 mr-3" />
-            <span className="text-gray-700">Advanced analytics</span>
-          </li>
+        <ul className="space-y-3 mb-6">
+          {product.features.map((feature) => (
+            <li key={feature} className="flex items-start gap-3">
+              <div className="mt-0.5 w-5 h-5 rounded-full bg-brand-500/15 border border-brand-500/25 flex items-center justify-center flex-shrink-0">
+                <Check className="w-3 h-3 text-brand-400" />
+              </div>
+              <span className="text-sm text-surface-300">{feature}</span>
+            </li>
+          ))}
         </ul>
 
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full btn-primary py-3"
         >
           {loading ? (
             <>
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               Processing...
             </>
           ) : (
-            'Subscribe Now'
+            <>
+              <Rocket className="w-4 h-4" />
+              Boost My Tool
+            </>
           )}
         </button>
       </div>

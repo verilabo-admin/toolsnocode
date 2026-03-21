@@ -1,39 +1,36 @@
-import React from 'react';
-import { Crown, AlertTriangle, XCircle } from 'lucide-react';
+import { Rocket, AlertTriangle, XCircle } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 
 export function SubscriptionStatus() {
   const { subscription, loading, isActive, isPastDue, isCanceled } = useSubscription();
 
-  if (loading || !subscription) {
-    return null;
-  }
+  if (loading || !subscription) return null;
 
   const getStatusIcon = () => {
-    if (isActive) return <Crown className="h-4 w-4 text-yellow-500" />;
-    if (isPastDue) return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-    if (isCanceled) return <XCircle className="h-4 w-4 text-red-500" />;
+    if (isActive) return <Rocket className="w-4 h-4 text-brand-400" />;
+    if (isPastDue) return <AlertTriangle className="w-4 h-4 text-amber-400" />;
+    if (isCanceled) return <XCircle className="w-4 h-4 text-red-400" />;
     return null;
   };
 
   const getStatusText = () => {
-    if (isActive) return subscription.productName || 'Active Subscription';
+    if (isActive) return 'Boost Active';
     if (isPastDue) return 'Payment Past Due';
-    if (isCanceled) return 'Subscription Canceled';
-    return 'Subscription';
+    if (isCanceled) return 'Boost Canceled';
+    return 'Boost';
   };
 
   const getStatusColor = () => {
-    if (isActive) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-    if (isPastDue) return 'text-orange-600 bg-orange-50 border-orange-200';
-    if (isCanceled) return 'text-red-600 bg-red-50 border-red-200';
-    return 'text-gray-600 bg-gray-50 border-gray-200';
+    if (isActive) return 'text-brand-400 bg-brand-500/10 border-brand-500/20';
+    if (isPastDue) return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+    if (isCanceled) return 'text-red-400 bg-red-500/10 border-red-500/20';
+    return 'text-surface-400 bg-surface-800 border-surface-700';
   };
 
   return (
-    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor()}`}>
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor()}`}>
       {getStatusIcon()}
-      <span className="ml-2">{getStatusText()}</span>
+      <span>{getStatusText()}</span>
     </div>
   );
 }

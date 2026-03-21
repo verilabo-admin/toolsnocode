@@ -2,22 +2,22 @@ import { supabase } from './supabase';
 
 export async function createCheckoutSession(priceId: string, mode: 'subscription' | 'payment') {
   const { data: { session } } = await supabase.auth.getSession();
-  
+
   if (!session?.user) {
     throw new Error('User not authenticated');
   }
 
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`, {
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${session.access_token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      priceId,
+      price_id: priceId,
       mode,
-      successUrl: `${window.location.origin}/success`,
-      cancelUrl: `${window.location.origin}/pricing`,
+      success_url: `${window.location.origin}/success`,
+      cancel_url: `${window.location.origin}/pricing`,
     }),
   });
 
@@ -32,9 +32,9 @@ export async function getUserSubscription() {
   const { data, error } = await supabase
     .from('stripe_user_subscriptions')
     .select('*')
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
+  if (error) {
     throw error;
   }
 

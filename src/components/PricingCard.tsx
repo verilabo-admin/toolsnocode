@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Loader2, Rocket } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { createCheckoutSession } from '../lib/stripe';
+import { supabase } from '../lib/supabase';
 import type { StripeProduct } from '../stripe-config';
 
 interface PricingCardProps {
@@ -15,17 +15,33 @@ export function PricingCard({ product, isPopular = false }: PricingCardProps) {
 
   const handleSubscribe = async () => {
     if (!user) {
-      // Redirect to sign in
-      window.location.href = '/auth';
+      window.location.href = '/signup';
       return;
     }
 
     setLoading(true);
     try {
-      const { url } = await createCheckoutSession(product.priceId, product.mode);
-      if (url) {
-        window.location.href = url;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          price_id: product.priceId,
+          mode: product.mode,
+          success_url: `${window.location.origin}/success`,
+          cancel_url: `${window.location.origin}/pricing`,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create checkout session');
+
+      const { url } = await response.json();
+      if (url) window.location.href = url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
     } finally {
@@ -33,53 +49,57 @@ export function PricingCard({ product, isPopular = false }: PricingCardProps) {
     }
   };
 
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
-    }).format(price);
-  };
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
 
   return (
-    <div className={`relative bg-white rounded-2xl shadow-lg border-2 p-8 ${
-      isPopular ? 'border-emerald-500 scale-105' : 'border-gray-200'
-    }`}>
-      {isPopular && (
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-          <span className="bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-            Most Popular
-          </span>
+    <div className={`glass-card overflow-hidden ${isPopular ? 'border-brand-500/30' : ''}`}>
+      {isPopular && product.highlight && (
+        <div className="bg-gradient-to-r from-brand-500/10 to-emerald-500/10 border-b border-surface-800/50 px-6 py-2 text-center">
+          <span className="text-xs font-medium text-brand-400">{product.highlight}</span>
         </div>
       )}
-      
-      <div className="text-center">
-        <h3 className="text-2xl font-bold text-gray-900 mb-4">{product.name}</h3>
-        <div className="mb-6">
-          <span className="text-4xl font-bold text-gray-900">
-            {formatPrice(product.price, product.currency)}
-          </span>
+
+      <div className="p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Rocket className="w-5 h-5 text-brand-400" />
+          <h3 className="text-xl font-bold text-white">{product.name}</h3>
+        </div>
+
+        <div className="mb-4">
+          <span className="text-3xl font-bold text-white">{formatPrice(product.price)}</span>
           {product.mode === 'subscription' && (
-            <span className="text-gray-600 ml-2">/month</span>
+            <span className="text-surface-500 ml-1">/month</span>
           )}
         </div>
-        <p className="text-gray-600 mb-8">{product.description}</p>
-        
+        <p className="text-sm text-surface-500 mb-6">{product.description}</p>
+
+        <ul className="space-y-3 mb-6">
+          {product.features.map((feature) => (
+            <li key={feature} className="flex items-start gap-3">
+              <div className="mt-0.5 w-5 h-5 rounded-full bg-brand-500/15 border border-brand-500/25 flex items-center justify-center flex-shrink-0">
+                <Check className="w-3 h-3 text-brand-400" />
+              </div>
+              <span className="text-sm text-surface-300">{feature}</span>
+            </li>
+          ))}
+        </ul>
+
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
-            isPopular
-              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-              : 'bg-gray-900 hover:bg-gray-800 text-white'
-          } disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center`}
+          className="w-full btn-primary py-3"
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               Processing...
             </>
           ) : (
-            'Get Started'
+            <>
+              <Rocket className="w-4 h-4" />
+              Boost My Tool
+            </>
           )}
         </button>
       </div>

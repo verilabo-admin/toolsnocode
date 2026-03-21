@@ -39,14 +39,7 @@ export default function App() {
             <Route path="signup" element={<SignupPage />} />
             <Route path="account" element={<AccountPage />} />
             <Route path="favorites" element={<FavoritesPage />} />
-            <Route
-              path="pricing"
-              element={
-                <ProtectedRoute>
-                  <PricingPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="pricing" element={<PricingPage />} />
             <Route
               path="success"
               element={
