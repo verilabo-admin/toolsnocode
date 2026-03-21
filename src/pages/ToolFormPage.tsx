@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2, Plus, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import ImageUploader from '../components/ui/ImageUploader';
 import type { Category } from '../types';
 
 export default function ToolFormPage() {
@@ -183,48 +184,53 @@ export default function ToolFormPage() {
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} className="input-field resize-none" placeholder="Detailed description of the tool..." />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Website</label>
-              <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className="input-field" placeholder="https://..." />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Logo URL</label>
-              <input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} className="input-field" placeholder="https://..." />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Website</label>
+            <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className="input-field" placeholder="https://..." />
           </div>
 
+          <ImageUploader
+            value={form.logo_url}
+            onChange={(url) => setForm({ ...form, logo_url: url })}
+            folder="logos"
+            label="Logo"
+            hint="Square image recommended. Will be converted to WebP automatically."
+            aspectRatio="square"
+          />
+
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-medium text-surface-300">Screenshots (URLs)</label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-surface-300">Screenshots</label>
               <button
                 type="button"
                 onClick={() => setScreenshotUrls((prev) => [...prev, ''])}
                 className="flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors"
               >
-                <Plus className="w-3 h-3" /> Add URL
+                <Plus className="w-3 h-3" /> Add screenshot
               </button>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-4">
               {screenshotUrls.map((url, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <input
+                <div key={i} className="relative">
+                  <ImageUploader
                     value={url}
-                    onChange={(e) => {
+                    onChange={(newUrl) => {
                       const next = [...screenshotUrls];
-                      next[i] = e.target.value;
+                      next[i] = newUrl;
                       setScreenshotUrls(next);
                     }}
-                    className="input-field flex-1"
-                    placeholder={`https://... (screenshot ${i + 1})`}
+                    folder="screenshots"
+                    label={`Screenshot ${i + 1}`}
+                    aspectRatio="landscape"
                   />
                   {screenshotUrls.length > 1 && (
                     <button
                       type="button"
                       onClick={() => setScreenshotUrls((prev) => prev.filter((_, j) => j !== i))}
-                      className="p-2 text-surface-500 hover:text-rose-400 transition-colors"
+                      className="absolute top-0 right-0 p-1 text-surface-500 hover:text-rose-400 transition-colors"
+                      title="Remove screenshot"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import ImageUploader from '../components/ui/ImageUploader';
 import type { Tool } from '../types';
 
 export default function ExpertFormPage() {
@@ -171,10 +172,14 @@ export default function ExpertFormPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Avatar URL</label>
-              <input value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} className="input-field" placeholder="https://..." />
-            </div>
+            <ImageUploader
+              value={form.avatar_url}
+              onChange={(url) => setForm({ ...form, avatar_url: url })}
+              folder="avatars"
+              label="Avatar / Profile Photo"
+              hint="Square image recommended."
+              aspectRatio="square"
+            />
             <div>
               <label className="block text-sm font-medium text-surface-300 mb-1.5">Portfolio URL</label>
               <input value={form.portfolio_url} onChange={(e) => setForm({ ...form, portfolio_url: e.target.value })} className="input-field" placeholder="https://..." />

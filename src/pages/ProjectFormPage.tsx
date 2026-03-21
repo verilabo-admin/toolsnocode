@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import ImageUploader from '../components/ui/ImageUploader';
 import type { Tool } from '../types';
 
 export default function ProjectFormPage() {
@@ -165,15 +166,18 @@ export default function ProjectFormPage() {
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} className="input-field resize-none" placeholder="Describe your project..." />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Screenshot URL</label>
-              <input value={form.screenshot_url} onChange={(e) => setForm({ ...form, screenshot_url: e.target.value })} className="input-field" placeholder="https://..." />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Live URL</label>
-              <input value={form.live_url} onChange={(e) => setForm({ ...form, live_url: e.target.value })} className="input-field" placeholder="https://..." />
-            </div>
+          <ImageUploader
+            value={form.screenshot_url}
+            onChange={(url) => setForm({ ...form, screenshot_url: url })}
+            folder="screenshots"
+            label="Project Screenshot"
+            hint="Landscape image recommended (16:9)."
+            aspectRatio="landscape"
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Live URL</label>
+            <input value={form.live_url} onChange={(e) => setForm({ ...form, live_url: e.target.value })} className="input-field" placeholder="https://..." />
           </div>
 
           <div>

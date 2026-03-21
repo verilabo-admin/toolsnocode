@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import ImageUploader from '../components/ui/ImageUploader';
 import type { Tool } from '../types';
 
 export default function TutorialFormPage() {
@@ -189,16 +190,19 @@ export default function TutorialFormPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Video URL</label>
-              <input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} className="input-field" placeholder="https://youtube.com/..." />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Thumbnail URL</label>
-              <input value={form.thumbnail_url} onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })} className="input-field" placeholder="https://..." />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Video URL</label>
+            <input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} className="input-field" placeholder="https://youtube.com/..." />
           </div>
+
+          <ImageUploader
+            value={form.thumbnail_url}
+            onChange={(url) => setForm({ ...form, thumbnail_url: url })}
+            folder="thumbnails"
+            label="Thumbnail"
+            hint="Landscape image recommended (16:9)."
+            aspectRatio="landscape"
+          />
 
           {error && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">{error}</div>
