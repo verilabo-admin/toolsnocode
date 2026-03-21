@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Users, BookOpen, Rocket, Search, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, Sparkles, Users, BookOpen, Rocket, Search, TrendingUp, Zap, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
@@ -9,6 +9,7 @@ import { useSEO } from '../hooks/useSEO';
 
 export default function HomePage() {
   const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
+  const [newestTools, setNewestTools] = useState<Tool[]>([]);
   const [trendingTools, setTrendingTools] = useState<Tool[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState({ tools: 0, experts: 0, tutorials: 0, projects: 0 });
@@ -21,9 +22,10 @@ export default function HomePage() {
 
   useEffect(() => {
     async function load() {
-      const [featuredRes, trendingRes, catRes, toolCount, expertCount, tutorialCount, projectCount] =
+      const [featuredRes, newestRes, trendingRes, catRes, toolCount, expertCount, tutorialCount, projectCount] =
         await Promise.all([
           supabase.from('tools').select('*').eq('is_featured', true).limit(6),
+          supabase.from('tools').select('*').order('created_at', { ascending: false }).limit(6),
           supabase.from('tools').select('*').eq('is_trending', true).order('upvotes', { ascending: false }).limit(6),
           supabase.from('categories').select('*').is('parent_id', null).order('sort_order'),
           supabase.from('tools').select('id', { count: 'exact', head: true }),
@@ -33,6 +35,7 @@ export default function HomePage() {
         ]);
 
       if (featuredRes.data) setFeaturedTools(featuredRes.data);
+      if (newestRes.data) setNewestTools(newestRes.data);
       if (trendingRes.data) setTrendingTools(trendingRes.data);
       if (catRes.data) setCategories(catRes.data);
       setStats({
@@ -134,7 +137,10 @@ export default function HomePage() {
               <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-brand-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white">Featured Tools</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Featured Tools</h2>
+                <p className="text-sm text-surface-500 mt-0.5">Hand-picked by our team</p>
+              </div>
             </div>
             <Link to="/tools?sort=featured" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
               View all <ArrowRight className="w-4 h-4" />
@@ -148,6 +154,30 @@ export default function HomePage() {
         </section>
       )}
 
+      {newestTools.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Recently Added</h2>
+                <p className="text-sm text-surface-500 mt-0.5">The latest tools in the directory</p>
+              </div>
+            </div>
+            <Link to="/tools?sort=newest" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
+              View all <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {newestTools.map((tool) => (
+              <ToolCard key={tool.id} tool={tool} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {trendingTools.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="flex items-center justify-between mb-8">
@@ -155,7 +185,10 @@ export default function HomePage() {
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-amber-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white">Trending Now</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Trending Now</h2>
+                <p className="text-sm text-surface-500 mt-0.5">Most popular this week</p>
+              </div>
             </div>
             <Link to="/tools?sort=trending" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
               View all <ArrowRight className="w-4 h-4" />
