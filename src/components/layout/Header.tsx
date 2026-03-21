@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Zap, Menu, X, User, LogOut, Heart, Settings, CreditCard } from 'lucide-react';
+import { Zap, Menu, X, User, LogOut, Heart, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
@@ -8,7 +8,6 @@ const navItems = [
   { name: 'Experts', href: '/experts' },
   { name: 'Tutorials', href: '/tutorials' },
   { name: 'Projects', href: '/projects' },
-  { name: 'Pricing', href: '/pricing' },
   { name: 'News', href: '/news' },
 ];
 
@@ -88,14 +87,6 @@ export default function Header() {
                       >
                         <Heart className="w-4 h-4" />
                         Favorites
-                      </Link>
-                      <Link
-                        to="/pricing"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        Pricing
                       </Link>
                       <div className="border-t border-surface-800 mt-1 pt-1">
                         <button

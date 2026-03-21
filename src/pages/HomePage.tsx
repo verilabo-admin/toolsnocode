@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Users, BookOpen, Rocket, Search, TrendingUp, Zap, Clock } from 'lucide-react';
+import { ArrowRight, Sparkles, Users, BookOpen, Rocket, Search, TrendingUp, Zap, Clock, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
@@ -26,9 +26,9 @@ export default function HomePage() {
     async function load() {
       const [featuredRes, newestRes, trendingRes, catRes, toolCount, expertCount, tutorialCount, projectCount] =
         await Promise.all([
-          supabase.from('tools').select('*').eq('is_featured', true).limit(6),
-          supabase.from('tools').select('*').order('created_at', { ascending: false }).limit(6),
-          supabase.from('tools').select('*').eq('is_trending', true).order('upvotes', { ascending: false }).limit(6),
+          supabase.from('tools').select('*').or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
+          supabase.from('tools').select('*').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
+          supabase.from('tools').select('*').eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false }).limit(6),
           supabase.from('categories').select('*').is('parent_id', null).order('sort_order'),
           supabase.from('tools').select('id', { count: 'exact', head: true }),
           supabase.from('experts').select('id', { count: 'exact', head: true }),
@@ -94,33 +94,17 @@ export default function HomePage() {
               </button>
             </form>
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              {user ? (
-                <Link
-                  to="/pricing"
-                  className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-                >
-                  View Pricing
-                  <ArrowRight className="ml-2 h-5 w-5" />
+            {!user && (
+              <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center animate-slide-up" style={{ animationDelay: '250ms' }}>
+                <Link to="/signup" className="btn-primary px-8 py-3 text-base">
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
-              ) : (
-                <>
-                  <Link
-                    to="/signup"
-                    className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-                  >
-                    Get Started
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                </>
-              )}
-            </div>
+                <Link to="/login" className="btn-secondary px-8 py-3 text-base">
+                  Sign In
+                </Link>
+              </div>
+            )}
 
             <div className="flex flex-wrap justify-center gap-6 text-sm text-surface-500 animate-slide-up" style={{ animationDelay: '300ms' }}>
               <div className="flex items-center gap-2">
@@ -160,6 +144,40 @@ export default function HomePage() {
         </section>
       )}
 
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <Link
+          to="/pricing"
+          className="block group relative overflow-hidden rounded-2xl border border-brand-500/20 bg-gradient-to-r from-brand-500/8 via-surface-900/50 to-emerald-500/8 hover:border-brand-500/40 hover:from-brand-500/12 hover:to-emerald-500/12 transition-all duration-300 p-6"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-500/5 via-transparent to-transparent" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-brand-500/15 border border-brand-500/25 flex items-center justify-center flex-shrink-0">
+                <Rocket className="w-5 h-5 text-brand-400" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-white">
+                  Potencia la visibilidad de tu herramienta
+                </p>
+                <p className="text-sm text-surface-400 mt-0.5">
+                  Aparece primero en los listados, en la sección destacada y muestra un video demo.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20">
+                <Star className="w-3.5 h-3.5 text-brand-400 fill-brand-400/30" />
+                <span className="text-xs font-medium text-brand-400">Boost Plan</span>
+              </div>
+              <span className="text-sm font-semibold text-brand-400 group-hover:text-brand-300 flex items-center gap-1 transition-colors">
+                Ver planes
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </span>
+            </div>
+          </div>
+        </Link>
+      </section>
+
       {featuredTools.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="flex items-center justify-between mb-8">
@@ -169,7 +187,7 @@ export default function HomePage() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">Featured Tools</h2>
-                <p className="text-sm text-surface-500 mt-0.5">Hand-picked by our team</p>
+                <p className="text-sm text-surface-500 mt-0.5">Top tools & boosted picks</p>
               </div>
             </div>
             <Link to="/tools?sort=featured" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">

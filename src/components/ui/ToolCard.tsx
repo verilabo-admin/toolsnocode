@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Star, TrendingUp, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, Star, TrendingUp, ShieldCheck, Rocket } from 'lucide-react';
 import type { Tool } from '../../types';
 import UpvoteButton from './UpvoteButton';
 
@@ -16,7 +16,18 @@ interface ToolCardProps {
 
 export default function ToolCard({ tool }: ToolCardProps) {
   return (
-    <Link to={`/tools/${tool.slug}`} className="glass-card-hover p-5 group block">
+    <Link
+      to={`/tools/${tool.slug}`}
+      className={`glass-card-hover p-5 group block ${tool.is_boosted ? 'border-brand-500/25 hover:border-brand-500/40' : ''}`}
+    >
+      {tool.is_boosted && (
+        <div className="flex items-center gap-1.5 mb-3 -mt-0.5">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20">
+            <Rocket className="w-3 h-3 text-brand-400" />
+            <span className="text-[10px] font-semibold text-brand-400 uppercase tracking-wide">Boosted</span>
+          </div>
+        </div>
+      )}
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-xl bg-surface-800 border border-surface-700/50 flex items-center justify-center overflow-hidden flex-shrink-0">
           {tool.logo_url ? (

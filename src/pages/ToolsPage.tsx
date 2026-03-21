@@ -52,15 +52,15 @@ export default function ToolsPage() {
       }
 
       if (sortBy === 'trending') {
-        query = query.eq('is_trending', true).order('upvotes', { ascending: false });
+        query = query.eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false });
       } else if (sortBy === 'featured') {
-        query = query.eq('is_featured', true).order('created_at', { ascending: false });
+        query = query.or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false });
       } else if (sortBy === 'rating') {
-        query = query.order('rating', { ascending: false });
+        query = query.order('is_boosted', { ascending: false }).order('rating', { ascending: false });
       } else if (sortBy === 'upvotes') {
-        query = query.order('upvotes', { ascending: false });
+        query = query.order('is_boosted', { ascending: false }).order('upvotes', { ascending: false });
       } else {
-        query = query.order('created_at', { ascending: false });
+        query = query.order('is_boosted', { ascending: false }).order('created_at', { ascending: false });
       }
 
       query = query.limit(100);
