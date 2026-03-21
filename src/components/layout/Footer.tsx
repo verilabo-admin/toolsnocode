@@ -38,10 +38,10 @@ export default function Footer() {
               The discovery layer for the AI Builder Economy. Find tools, experts, and resources.
             </p>
             <div className="flex gap-3">
-              <a href="#" className="p-2 text-surface-500 hover:text-surface-200 bg-surface-900 rounded-lg border border-surface-800 transition-colors">
+              <a href="https://x.com/Nocodeboy" target="_blank" rel="noopener noreferrer" className="p-2 text-surface-500 hover:text-surface-200 bg-surface-900 rounded-lg border border-surface-800 transition-colors">
                 <Twitter className="w-4 h-4" />
               </a>
-              <a href="#" className="p-2 text-surface-500 hover:text-surface-200 bg-surface-900 rounded-lg border border-surface-800 transition-colors">
+              <a href="https://github.com/Nocodeboy" target="_blank" rel="noopener noreferrer" className="p-2 text-surface-500 hover:text-surface-200 bg-surface-900 rounded-lg border border-surface-800 transition-colors">
                 <Github className="w-4 h-4" />
               </a>
             </div>
