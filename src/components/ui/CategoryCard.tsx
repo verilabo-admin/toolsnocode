@@ -5,13 +5,16 @@ import {
   Mail, BarChart3, PenLine, Share2, Palette, Microscope,
   GraduationCap, Headphones, Target, Users, DollarSign,
   Languages, Music, Heart, Scale, Home, ShoppingCart,
-  Gamepad2, Sparkles, Zap, type LucideIcon,
+  Gamepad2, Sparkles, Zap, MessageCircle, Code, Shield,
+  Megaphone, Blocks, Table, KanbanSquare, LayoutDashboard,
+  Box, Presentation, type LucideIcon,
 } from 'lucide-react';
 import type { Category } from '../../types';
 
 const iconMap: Record<string, LucideIcon> = {
   bot: Bot,
   code2: Code2,
+  code: Code,
   trending: TrendingUp,
   layers: Layers,
   cpu: Cpu,
@@ -26,6 +29,7 @@ const iconMap: Record<string, LucideIcon> = {
   search: SearchIcon,
   mail: Mail,
   barchart: BarChart3,
+  'bar-chart': BarChart3,
   penline: PenLine,
   zap: Zap,
   share2: Share2,
@@ -45,6 +49,15 @@ const iconMap: Record<string, LucideIcon> = {
   shoppingcart: ShoppingCart,
   gamepad2: Gamepad2,
   sparkles: Sparkles,
+  'message-circle': MessageCircle,
+  shield: Shield,
+  megaphone: Megaphone,
+  blocks: Blocks,
+  table: Table,
+  kanban: KanbanSquare,
+  presentation: Presentation,
+  cube: Box,
+  productivity: LayoutDashboard,
 };
 
 interface CategoryCardProps {
