@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Zap, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { GoogleButton } from '../components/auth/GoogleButton';
 
 export default function AuthPage() {
   const { user, loading: authLoading } = useAuth();
@@ -144,6 +145,8 @@ export default function AuthPage() {
               )}
             </button>
           </form>
+
+          <GoogleButton onError={(msg) => setError(msg)} />
         </div>
       </div>
     </div>

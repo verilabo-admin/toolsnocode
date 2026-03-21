@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Zap } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { GoogleButton } from './GoogleButton';
 
 export function SignupForm() {
   const [email, setEmail] = useState('');
@@ -180,6 +181,8 @@ export function SignupForm() {
               {loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
+
+          <GoogleButton onError={(msg) => setError(msg)} />
         </div>
       </div>
     </div>

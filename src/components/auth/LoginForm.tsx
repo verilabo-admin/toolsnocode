@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Zap } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { GoogleButton } from './GoogleButton';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -124,6 +125,8 @@ export function LoginForm() {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
+
+          <GoogleButton onError={(msg) => setError(msg)} />
         </div>
       </div>
     </div>
