@@ -1,14 +1,16 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Rocket, TrendingUp, Play, Award, BarChart3, Search,
   ArrowRight, Check, Loader2, Zap, Star, ChevronDown,
-  Eye, MousePointerClick, Trophy, Shield, Clock, Users
+  Eye, MousePointerClick, Trophy, Shield, Clock, Users, Wrench
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSEO } from '../hooks/useSEO';
 import { STRIPE_PRODUCTS } from '../stripe-config';
+import { createCheckoutSession } from '../lib/stripe';
 import { supabase } from '../lib/supabase';
+import type { Tool } from '../types';
 
 const benefits = [
   {
@@ -95,8 +97,12 @@ const comparison = [
 
 export function PricingPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [userTools, setUserTools] = useState<Tool[]>([]);
+  const [selectedToolId, setSelectedToolId] = useState<string>('');
+  const [toolsLoading, setToolsLoading] = useState(false);
   const product = STRIPE_PRODUCTS[0];
 
   useSEO({
@@ -105,31 +111,43 @@ export function PricingPage() {
     url: '/pricing',
   });
 
-  const handleSubscribe = async () => {
+  useEffect(() => {
     if (!user) return;
+
+    const fetchUserTools = async () => {
+      setToolsLoading(true);
+      const { data } = await supabase
+        .from('tools')
+        .select('id, name, slug, logo_url, is_boosted')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (data) {
+        setUserTools(data as Tool[]);
+        const preselected = searchParams.get('tool');
+        if (preselected) {
+          const match = data.find((t: { id: string }) => t.id === preselected);
+          if (match) setSelectedToolId(match.id);
+        } else {
+          const unboosted = data.find((t: { is_boosted?: boolean }) => !t.is_boosted);
+          if (unboosted) setSelectedToolId(unboosted.id);
+        }
+      }
+      setToolsLoading(false);
+    };
+
+    fetchUserTools();
+  }, [user, searchParams]);
+
+  const selectedTool = userTools.find((t) => t.id === selectedToolId);
+  const isAlreadyBoosted = selectedTool?.is_boosted;
+
+  const handleSubscribe = async () => {
+    if (!user || !selectedToolId) return;
 
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          price_id: product.priceId,
-          mode: product.mode,
-          success_url: `${window.location.origin}/success`,
-          cancel_url: `${window.location.origin}/pricing`,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to create checkout session');
-
-      const { url } = await response.json();
+      const { url } = await createCheckoutSession(product.priceId, product.mode, selectedToolId);
       if (url) window.location.href = url;
     } catch (error) {
       console.error('Checkout error:', error);
@@ -141,9 +159,55 @@ export function PricingPage() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
 
+  const canCheckout = user && selectedToolId && !isAlreadyBoosted;
+
+  const renderBoostButton = (className: string) => {
+    if (!user) {
+      return (
+        <Link to="/signup" className={`btn-primary ${className}`}>
+          <Rocket className="w-4 h-4" />
+          Get Started Free
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      );
+    }
+
+    if (userTools.length === 0 && !toolsLoading) {
+      return (
+        <Link to="/tools/new" className={`btn-primary ${className}`}>
+          <Wrench className="w-4 h-4" />
+          Submit Your Tool First
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      );
+    }
+
+    if (isAlreadyBoosted) {
+      return (
+        <button disabled className={`btn-primary opacity-50 cursor-not-allowed ${className}`}>
+          <Check className="w-4 h-4" />
+          Already Boosted
+        </button>
+      );
+    }
+
+    return (
+      <button
+        onClick={handleSubscribe}
+        disabled={loading || !selectedToolId}
+        className={`btn-primary ${className}`}
+      >
+        {loading ? (
+          <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+        ) : (
+          <><Rocket className="w-4 h-4" /> Boost My Tool — {formatPrice(product.price)}/yr</>
+        )}
+      </button>
+    );
+  };
+
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-500/8 via-transparent to-transparent" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-brand-500/6 rounded-full blur-[140px]" />
@@ -183,26 +247,11 @@ export function PricingPage() {
             </div>
           </div>
 
-          {user ? (
-            <button onClick={handleSubscribe} disabled={loading} className="btn-primary text-base px-8 py-3.5">
-              {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-              ) : (
-                <><Rocket className="w-5 h-5" /> Boost My Tool Now — {formatPrice(product.price)}/yr</>
-              )}
-            </button>
-          ) : (
-            <Link to="/signup" className="btn-primary text-base px-8 py-3.5">
-              <Rocket className="w-5 h-5" />
-              Get Started Free
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          )}
+          {renderBoostButton('text-base px-8 py-3.5')}
           <p className="text-xs text-surface-600 mt-3">No contracts. Cancel anytime.</p>
         </div>
       </section>
 
-      {/* Comparison table */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <h2 className="text-xl font-bold text-white text-center mb-6">Standard vs Boosted</h2>
         <div className="glass-card overflow-hidden">
@@ -216,12 +265,12 @@ export function PricingPage() {
               <div className="px-5 py-3.5 text-sm text-surface-300">{row.feature}</div>
               <div className="px-5 py-3.5 text-sm text-surface-500 text-center border-l border-surface-800/50">
                 {typeof row.standard === 'boolean' ? (
-                  row.standard ? <Check className="w-4 h-4 text-emerald-400 mx-auto" /> : <span className="text-surface-700">—</span>
+                  row.standard ? <Check className="w-4 h-4 text-emerald-400 mx-auto" /> : <span className="text-surface-700">&mdash;</span>
                 ) : row.standard}
               </div>
               <div className="px-5 py-3.5 text-sm text-center border-l border-brand-500/20 bg-brand-500/5">
                 {typeof row.boosted === 'boolean' ? (
-                  row.boosted ? <Check className="w-4 h-4 text-brand-400 mx-auto" /> : <span className="text-surface-700">—</span>
+                  row.boosted ? <Check className="w-4 h-4 text-brand-400 mx-auto" /> : <span className="text-surface-700">&mdash;</span>
                 ) : <span className="text-brand-400 font-medium">{row.boosted}</span>}
               </div>
             </div>
@@ -229,7 +278,6 @@ export function PricingPage() {
         </div>
       </section>
 
-      {/* Benefits + Pricing card */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="grid lg:grid-cols-5 gap-8 items-start">
           <div className="lg:col-span-3 grid sm:grid-cols-2 gap-4">
@@ -261,11 +309,32 @@ export function PricingPage() {
                   <span className="text-surface-400">/year</span>
                 </div>
                 <p className="text-xs text-surface-500 mt-1.5">
-                  That's {formatPrice(product.price / 12)}/month — less than a coffee per week
+                  That's {formatPrice(product.price / 12)}/month
                 </p>
               </div>
 
               <div className="p-6">
+                {user && userTools.length > 0 && (
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-surface-400 mb-2">Select tool to boost</label>
+                    <select
+                      value={selectedToolId}
+                      onChange={(e) => setSelectedToolId(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl bg-surface-800 border border-surface-700 text-surface-200 text-sm focus:outline-none focus:border-brand-500/60 transition-colors"
+                    >
+                      <option value="">Choose a tool...</option>
+                      {userTools.map((tool) => (
+                        <option key={tool.id} value={tool.id} disabled={tool.is_boosted}>
+                          {tool.name}{tool.is_boosted ? ' (already boosted)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {isAlreadyBoosted && (
+                      <p className="text-xs text-amber-400 mt-1.5">This tool is already boosted.</p>
+                    )}
+                  </div>
+                )}
+
                 <ul className="space-y-3 mb-6">
                   {product.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
@@ -277,24 +346,7 @@ export function PricingPage() {
                   ))}
                 </ul>
 
-                {user ? (
-                  <button
-                    onClick={handleSubscribe}
-                    disabled={loading}
-                    className="w-full btn-primary py-3.5 text-base"
-                  >
-                    {loading ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-                    ) : (
-                      <><Rocket className="w-4 h-4" /> Boost My Tool</>
-                    )}
-                  </button>
-                ) : (
-                  <Link to="/signup" className="w-full btn-primary py-3.5 text-base">
-                    Sign Up to Boost
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                )}
+                {renderBoostButton('w-full py-3.5 text-base')}
 
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-center gap-1.5 text-xs text-surface-500">
@@ -309,7 +361,6 @@ export function PricingPage() {
               </div>
             </div>
 
-            {/* Submit CTA */}
             <div className="mt-4 glass-card p-5 border-surface-800/60">
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -331,7 +382,6 @@ export function PricingPage() {
         </div>
       </section>
 
-      {/* Mid-page CTA banner */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-500/10 via-surface-900/60 to-emerald-500/10 border border-brand-500/25 p-8 text-center">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-500/8 via-transparent to-transparent" />
@@ -343,22 +393,11 @@ export function PricingPage() {
             <p className="text-surface-400 max-w-xl mx-auto mb-6 text-sm leading-relaxed">
               Every day your tool isn't boosted, it's falling behind. Boosted tools appear first — in search, in listings, and on the homepage.
             </p>
-            {user ? (
-              <button onClick={handleSubscribe} disabled={loading} className="btn-primary px-8 py-3">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Rocket className="w-4 h-4" /> Boost Now — {formatPrice(product.price)}/yr</>}
-              </button>
-            ) : (
-              <Link to="/signup" className="btn-primary px-8 py-3">
-                <Rocket className="w-4 h-4" />
-                Start for free, boost anytime
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            )}
+            {renderBoostButton('px-8 py-3')}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <h2 className="text-2xl font-bold text-white mb-8 text-center">Frequently Asked Questions</h2>
         <div className="space-y-2">
@@ -381,7 +420,6 @@ export function PricingPage() {
         </div>
       </section>
 
-      {/* Final CTA */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="glass-card p-10 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 via-transparent to-brand-500/5" />
@@ -394,17 +432,7 @@ export function PricingPage() {
               Join the builders already using Boost to get discovered faster. {formatPrice(product.price)}/year. Cancel anytime.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {user ? (
-                <button onClick={handleSubscribe} disabled={loading} className="btn-primary px-8 py-3">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Rocket className="w-4 h-4" /> Boost My Tool</>}
-                </button>
-              ) : (
-                <Link to="/signup" className="btn-primary px-8 py-3">
-                  <Rocket className="w-4 h-4" />
-                  Get Started Free
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
+              {renderBoostButton('px-8 py-3')}
               <Link to="/tools" className="btn-secondary px-8 py-3">
                 <Search className="w-4 h-4" />
                 Browse Tools

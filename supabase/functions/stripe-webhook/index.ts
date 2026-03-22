@@ -124,10 +124,8 @@ async function handleEvent(event: Stripe.Event) {
   }
 }
 
-// based on the excellent https://github.com/t3dotgg/stripe-recommendations
 async function syncCustomerFromStripe(customerId: string) {
   try {
-    // fetch latest subscription data from Stripe
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       limit: 1,
@@ -135,7 +133,6 @@ async function syncCustomerFromStripe(customerId: string) {
       expand: ['data.default_payment_method'],
     });
 
-    // TODO verify if needed
     if (subscriptions.data.length === 0) {
       console.info(`No active subscriptions found for customer: ${customerId}`);
       const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
@@ -152,12 +149,13 @@ async function syncCustomerFromStripe(customerId: string) {
         console.error('Error updating subscription status:', noSubError);
         throw new Error('Failed to update subscription status in database');
       }
+
+      await deactivateBoostForCustomer(customerId);
+      return;
     }
 
-    // assumes that a customer can only have a single subscription
     const subscription = subscriptions.data[0];
 
-    // store subscription state
     const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
       {
         customer_id: customerId,
@@ -183,9 +181,83 @@ async function syncCustomerFromStripe(customerId: string) {
       console.error('Error syncing subscription:', subError);
       throw new Error('Failed to sync subscription in database');
     }
+
+    const toolId = subscription.metadata?.tool_id;
+
+    if (subscription.status === 'active' && toolId) {
+      await activateBoost(customerId, toolId, subscription.current_period_end);
+    } else if (['canceled', 'unpaid', 'incomplete_expired'].includes(subscription.status)) {
+      await deactivateBoostForCustomer(customerId);
+    }
+
     console.info(`Successfully synced subscription for customer: ${customerId}`);
   } catch (error) {
     console.error(`Failed to sync subscription for customer ${customerId}:`, error);
     throw error;
+  }
+}
+
+async function activateBoost(customerId: string, toolId: string, periodEnd: number) {
+  try {
+    const { data: customerData } = await supabase
+      .from('stripe_customers')
+      .select('user_id')
+      .eq('customer_id', customerId)
+      .maybeSingle();
+
+    if (!customerData?.user_id) {
+      console.error(`No user found for customer ${customerId}`);
+      return;
+    }
+
+    const expiresAt = new Date(periodEnd * 1000).toISOString();
+
+    const { error } = await supabase
+      .from('tools')
+      .update({
+        is_boosted: true,
+        boost_expires_at: expiresAt,
+        boost_plan: 'boost',
+      })
+      .eq('id', toolId)
+      .eq('user_id', customerData.user_id);
+
+    if (error) {
+      console.error('Error activating boost:', error);
+    } else {
+      console.info(`Boost activated for tool ${toolId} until ${expiresAt}`);
+    }
+  } catch (error) {
+    console.error('Error in activateBoost:', error);
+  }
+}
+
+async function deactivateBoostForCustomer(customerId: string) {
+  try {
+    const { data: customerData } = await supabase
+      .from('stripe_customers')
+      .select('user_id')
+      .eq('customer_id', customerId)
+      .maybeSingle();
+
+    if (!customerData?.user_id) return;
+
+    const { error } = await supabase
+      .from('tools')
+      .update({
+        is_boosted: false,
+        boost_expires_at: null,
+        boost_plan: '',
+      })
+      .eq('user_id', customerData.user_id)
+      .eq('is_boosted', true);
+
+    if (error) {
+      console.error('Error deactivating boost:', error);
+    } else {
+      console.info(`Boost deactivated for customer ${customerId}`);
+    }
+  } catch (error) {
+    console.error('Error in deactivateBoostForCustomer:', error);
   }
 }

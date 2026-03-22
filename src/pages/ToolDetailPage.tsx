@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, ExternalLink, Star, TrendingUp, Globe,
+  ArrowLeft, ArrowRight, ExternalLink, Star, TrendingUp, Globe,
   Tag, BarChart3, Clock, BookOpen, Users, Rocket, Pencil, ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -239,6 +239,22 @@ export default function ToolDetailPage() {
                 initialVerified={tool.is_verified ?? false}
                 onVerified={() => setTool((prev) => prev ? { ...prev, is_verified: true } : prev)}
               />
+            )}
+
+            {user?.id === tool.user_id && !tool.is_boosted && (
+              <Link
+                to={`/pricing?tool=${tool.id}`}
+                className="mt-3 flex items-center gap-3 w-full p-3.5 rounded-xl bg-gradient-to-r from-brand-500/10 to-emerald-500/8 border border-brand-500/20 hover:border-brand-500/40 transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-brand-500/15 border border-brand-500/25 flex items-center justify-center flex-shrink-0">
+                  <Rocket className="w-4 h-4 text-brand-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-surface-200">Boost this tool</p>
+                  <p className="text-xs text-surface-500">Priority ranking, featured badge, demo video & more</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-brand-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+              </Link>
             )}
           </div>
         </div>

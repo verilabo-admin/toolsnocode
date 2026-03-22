@@ -1,10 +1,21 @@
 import { supabase } from './supabase';
 
-export async function createCheckoutSession(priceId: string, mode: 'subscription' | 'payment') {
+export async function createCheckoutSession(priceId: string, mode: 'subscription' | 'payment', toolId?: string) {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
     throw new Error('User not authenticated');
+  }
+
+  const body: Record<string, string> = {
+    price_id: priceId,
+    mode,
+    success_url: `${window.location.origin}/success`,
+    cancel_url: `${window.location.origin}/pricing`,
+  };
+
+  if (toolId) {
+    body.tool_id = toolId;
   }
 
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
@@ -13,12 +24,7 @@ export async function createCheckoutSession(priceId: string, mode: 'subscription
       'Authorization': `Bearer ${session.access_token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      price_id: priceId,
-      mode,
-      success_url: `${window.location.origin}/success`,
-      cancel_url: `${window.location.origin}/pricing`,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {

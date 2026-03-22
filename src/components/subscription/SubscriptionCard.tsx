@@ -59,7 +59,7 @@ export function SubscriptionCard({ product }: SubscriptionCardProps) {
 
         <div className="mb-6">
           <span className="text-3xl font-bold text-white">{formatPrice(product.price)}</span>
-          <span className="text-surface-500 ml-1">/month</span>
+          <span className="text-surface-500 ml-1">/year</span>
         </div>
 
         <ul className="space-y-3 mb-6">

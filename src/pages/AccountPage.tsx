@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import {
   User, Wrench, Users, BookOpen, FolderOpen, ShieldCheck,
   Mail, Key, Loader2, CheckCircle2, AlertCircle, Clock,
-  XCircle, ExternalLink, Pencil, ArrowRight, Plus
+  XCircle, ExternalLink, Pencil, ArrowRight, Plus, Rocket
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -153,6 +153,27 @@ export default function AccountPage() {
                       prev.map((x) => x.id === t.id ? { ...x, is_verified: true } : x)
                     )}
                   />
+                )}
+                {!t.is_boosted && (
+                  <Link
+                    to={`/pricing?tool=${t.id}`}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-500/8 border border-brand-500/20 hover:border-brand-500/40 transition-all text-xs group"
+                  >
+                    <Rocket className="w-3.5 h-3.5 text-brand-400" />
+                    <span className="text-surface-300 font-medium">Boost this tool</span>
+                    <ArrowRight className="w-3 h-3 text-brand-400 ml-auto group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                )}
+                {t.is_boosted && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-500/10 border border-brand-500/25 text-xs">
+                    <Rocket className="w-3.5 h-3.5 text-brand-400" />
+                    <span className="text-brand-400 font-medium">Boosted</span>
+                    {t.boost_expires_at && (
+                      <span className="text-surface-500 ml-auto">
+                        until {new Date(t.boost_expires_at).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             );
