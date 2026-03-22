@@ -7,37 +7,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const CATEGORIES: Record<string, string[]> = {
-  "AI Models": [
-    "GPT OpenAI model release",
-    "Claude Anthropic AI model",
-    "Gemini Google AI release",
-    "LLM large language model launch",
-    "AI model benchmark 2025",
-  ],
-  "No-Code Tools": [
-    "no-code tool launch 2025",
-    "nocode platform update",
-    "bubble webflow framer update",
-    "low code platform release",
-    "make zapier automation update",
-  ],
-  "Industry": [
-    "AI startup funding 2025",
-    "artificial intelligence acquisition",
-    "AI company investment round",
-  ],
-  "Research": [
-    "AI research paper breakthrough",
-    "machine learning research 2025",
-    "AI safety alignment research",
-  ],
-  "Policy": [
-    "AI regulation policy 2025",
-    "artificial intelligence law government",
-    "AI ethics policy regulation",
-  ],
-};
+interface RSSItem {
+  title: string;
+  url: string;
+  pubDate: string;
+  description: string;
+  source: string;
+  category: string;
+}
+
+const RSS_SOURCES: Array<{ url: string; category: string; source: string }> = [
+  { url: "https://techcrunch.com/feed/", source: "TechCrunch", category: "AI Models" },
+  { url: "https://www.theverge.com/rss/index.xml", source: "The Verge", category: "AI Models" },
+  { url: "https://feeds.arstechnica.com/arstechnica/technology-lab", source: "Ars Technica", category: "Research" },
+  { url: "https://venturebeat.com/feed/", source: "VentureBeat", category: "Industry" },
+  { url: "https://feeds.feedburner.com/oreilly/radar/atom", source: "O'Reilly Radar", category: "No-Code Tools" },
+  { url: "https://www.wired.com/feed/rss", source: "Wired", category: "Policy" },
+  { url: "https://rss.slashdot.org/Slashdot/slashAI", source: "Slashdot AI", category: "AI Models" },
+  { url: "https://www.infoq.com/ai-ml-data-eng/articles.atom", source: "InfoQ", category: "Research" },
+];
+
+const AI_KEYWORDS = [
+  "ai", "artificial intelligence", "machine learning", "llm", "gpt", "claude",
+  "gemini", "openai", "anthropic", "google ai", "microsoft ai", "no-code",
+  "nocode", "low-code", "automation", "generative", "neural", "deep learning",
+  "model", "chatgpt", "copilot", "midjourney", "stable diffusion", "make.com",
+  "zapier", "bubble", "webflow", "airtable", "notion ai",
+];
 
 function slugify(text: string): string {
   return text
@@ -47,6 +43,20 @@ function slugify(text: string): string {
     .replace(/-+/g, "-")
     .slice(0, 80)
     .replace(/-$/, "");
+}
+
+function isAIRelated(title: string, description: string): boolean {
+  const combined = (title + " " + description).toLowerCase();
+  return AI_KEYWORDS.some((kw) => combined.includes(kw));
+}
+
+function guessCategory(title: string, description: string): string {
+  const text = (title + " " + description).toLowerCase();
+  if (text.match(/regulat|policy|law|government|eu ai|act|ban|ethic/)) return "Policy";
+  if (text.match(/research|paper|study|arxiv|benchmark|dataset|training/)) return "Research";
+  if (text.match(/fund|invest|acqui|startup|billion|valuation|series/)) return "Industry";
+  if (text.match(/no.?code|low.?code|nocode|bubble|webflow|zapier|make\.com|airtable|automation tool/)) return "No-Code Tools";
+  return "AI Models";
 }
 
 function extractMetaTag(html: string, ...attrs: string[]): string | null {
@@ -106,12 +116,64 @@ async function fetchArticleData(url: string): Promise<{ image: string | null; ra
     });
     if (!res.ok) return { image: null, rawContent: "" };
     const html = await res.text();
-    return {
-      image: extractImage(html),
-      rawContent: extractMainContent(html),
-    };
+    return { image: extractImage(html), rawContent: extractMainContent(html) };
   } catch {
     return { image: null, rawContent: "" };
+  }
+}
+
+async function parseRSSFeed(feedUrl: string): Promise<Array<{ title: string; url: string; pubDate: string; description: string }>> {
+  try {
+    const res = await fetch(feedUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; ToolsNoCode/1.0)" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+
+    const items: Array<{ title: string; url: string; pubDate: string; description: string }> = [];
+
+    const itemMatches = xml.matchAll(/<item[^>]*>([\s\S]*?)<\/item>/gi);
+    for (const match of itemMatches) {
+      const item = match[1];
+      const title = item.match(/<title[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/i)?.[1]?.trim() ?? "";
+      const link =
+        item.match(/<link[^>]*>([^<]+)<\/link>/i)?.[1]?.trim() ??
+        item.match(/<guid[^>]*isPermaLink="true"[^>]*>([^<]+)<\/guid>/i)?.[1]?.trim() ??
+        "";
+      const pubDate = item.match(/<pubDate[^>]*>(.*?)<\/pubDate>/i)?.[1]?.trim() ?? new Date().toISOString();
+      const desc =
+        item.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i)?.[1]?.trim() ??
+        item.match(/<summary[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/summary>/i)?.[1]?.trim() ??
+        "";
+
+      if (title && link) {
+        items.push({ title, url: link, pubDate, description: stripTags(desc).slice(0, 500) });
+      }
+    }
+
+    const entryMatches = xml.matchAll(/<entry[^>]*>([\s\S]*?)<\/entry>/gi);
+    for (const match of entryMatches) {
+      const entry = match[1];
+      const title = entry.match(/<title[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/i)?.[1]?.trim() ?? "";
+      const link = entry.match(/<link[^>]*href=["']([^"']+)["']/i)?.[1]?.trim() ?? "";
+      const pubDate =
+        entry.match(/<published[^>]*>(.*?)<\/published>/i)?.[1]?.trim() ??
+        entry.match(/<updated[^>]*>(.*?)<\/updated>/i)?.[1]?.trim() ??
+        new Date().toISOString();
+      const desc =
+        entry.match(/<content[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content>/i)?.[1]?.trim() ??
+        entry.match(/<summary[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/summary>/i)?.[1]?.trim() ??
+        "";
+
+      if (title && link) {
+        items.push({ title, url: link, pubDate, description: stripTags(desc).slice(0, 500) });
+      }
+    }
+
+    return items.slice(0, 10);
+  } catch {
+    return [];
   }
 }
 
@@ -168,7 +230,6 @@ Write only the article text and the TAGS line, nothing else.`;
     : [category];
 
   const content = text.replace(/TAGS:.*$/im, "").trim();
-
   return { rewrittenContent: content, tags };
 }
 
@@ -177,123 +238,133 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  const NEWSAPI_KEY = Deno.env.get("NEWSAPI_KEY");
-  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+  try {
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-  if (!NEWSAPI_KEY || !OPENAI_API_KEY) {
-    return new Response(JSON.stringify({ error: "Missing API keys" }), {
+    if (!OPENAI_API_KEY) {
+      return new Response(JSON.stringify({ error: "Missing OPENAI_API_KEY" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const results: { saved: number; skipped: number; errors: string[]; feeds_parsed: number } = {
+      saved: 0,
+      skipped: 0,
+      errors: [],
+      feeds_parsed: 0,
+    };
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 3);
+
+    const allArticles: Array<RSSItem> = [];
+
+    for (const feed of RSS_SOURCES) {
+      const items = await parseRSSFeed(feed.url);
+      if (items.length > 0) results.feeds_parsed++;
+
+      for (const item of items) {
+        if (!item.url || !item.title) continue;
+
+        const pubDate = new Date(item.pubDate);
+        if (isNaN(pubDate.getTime()) || pubDate < cutoffDate) continue;
+
+        const category = guessCategory(item.title, item.description) || feed.category;
+
+        if (!isAIRelated(item.title, item.description)) continue;
+
+        allArticles.push({
+          title: item.title,
+          url: item.url,
+          pubDate: item.pubDate,
+          description: item.description,
+          source: feed.source,
+          category,
+        });
+      }
+    }
+
+    const seen = new Set<string>();
+    const unique = allArticles.filter((a) => {
+      if (seen.has(a.url)) return false;
+      seen.add(a.url);
+      return true;
+    });
+
+    const toProcess = unique.slice(0, 10);
+
+    for (const item of toProcess) {
+      try {
+        const { data: existing } = await supabase
+          .from("news")
+          .select("id")
+          .eq("url", item.url)
+          .maybeSingle();
+
+        if (existing) {
+          results.skipped++;
+          continue;
+        }
+
+        const { image: scrapedImage, rawContent } = await fetchArticleData(item.url);
+        const imageUrl = scrapedImage ?? null;
+
+        const { rewrittenContent, tags } = await rewriteWithOpenAI(
+          item.title,
+          item.description,
+          rawContent || item.description,
+          item.category,
+          OPENAI_API_KEY
+        );
+
+        const baseSlug = slugify(item.title);
+        const uniqueSuffix = Date.now().toString(36).slice(-5);
+        const slug = `${baseSlug}-${uniqueSuffix}`;
+
+        const publishedAt = !isNaN(new Date(item.pubDate).getTime())
+          ? new Date(item.pubDate).toISOString()
+          : new Date().toISOString();
+
+        const { error: insertError } = await supabase.from("news").insert({
+          title: item.title,
+          slug,
+          summary: item.description,
+          content: rewrittenContent,
+          url: item.url,
+          image_url: imageUrl,
+          source: item.source,
+          category: item.category,
+          tags,
+          published_at: publishedAt,
+          is_featured: false,
+        });
+
+        if (insertError) {
+          results.errors.push(`Insert error: ${insertError.message}`);
+        } else {
+          results.saved++;
+        }
+
+        await new Promise((r) => setTimeout(r, 600));
+      } catch (e) {
+        results.errors.push(`Processing error for "${item.title}": ${String(e)}`);
+      }
+    }
+
+    return new Response(JSON.stringify(results), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
-
-  const results: { saved: number; skipped: number; errors: string[] } = {
-    saved: 0,
-    skipped: 0,
-    errors: [],
-  };
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const fromDate = yesterday.toISOString().split("T")[0];
-
-  const allArticles: Array<{ article: Record<string, string>; category: string }> = [];
-
-  for (const [category, queries] of Object.entries(CATEGORIES)) {
-    const query = queries[Math.floor(Math.random() * queries.length)];
-    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&from=${fromDate}&sortBy=publishedAt&language=en&pageSize=3&apiKey=${NEWSAPI_KEY}`;
-
-    try {
-      const res = await fetch(url);
-      if (!res.ok) {
-        results.errors.push(`NewsAPI error for ${category}: ${res.status}`);
-        continue;
-      }
-      const data = await res.json();
-      if (data.articles) {
-        for (const a of data.articles) {
-          if (a.url && !a.url.includes("[Removed]") && a.title && a.title !== "[Removed]") {
-            allArticles.push({ article: a, category });
-          }
-        }
-      }
-    } catch (e) {
-      results.errors.push(`Fetch error for ${category}: ${String(e)}`);
-    }
-  }
-
-  for (const { article, category } of allArticles) {
-    try {
-      const { data: existing } = await supabase
-        .from("news")
-        .select("id")
-        .eq("url", article.url)
-        .maybeSingle();
-
-      if (existing) {
-        results.skipped++;
-        continue;
-      }
-
-      const { image: scrapedImage, rawContent } = await fetchArticleData(article.url);
-
-      const imageUrl = scrapedImage ?? article.urlToImage ?? null;
-
-      const summary = article.description ?? article.content?.slice(0, 300) ?? "";
-
-      const { rewrittenContent, tags } = await rewriteWithOpenAI(
-        article.title,
-        summary,
-        rawContent || article.content || summary,
-        category,
-        OPENAI_API_KEY
-      );
-
-      const baseSlug = slugify(article.title);
-      const uniqueSuffix = Date.now().toString(36).slice(-5);
-      const slug = `${baseSlug}-${uniqueSuffix}`;
-
-      const source =
-        article.source?.name ??
-        new URL(article.url).hostname.replace("www.", "");
-
-      const publishedAt = article.publishedAt
-        ? new Date(article.publishedAt).toISOString()
-        : new Date().toISOString();
-
-      const { error: insertError } = await supabase.from("news").insert({
-        title: article.title,
-        slug,
-        summary,
-        content: rewrittenContent,
-        url: article.url,
-        image_url: imageUrl,
-        source,
-        category,
-        tags,
-        published_at: publishedAt,
-        is_featured: false,
-      });
-
-      if (insertError) {
-        results.errors.push(`Insert error: ${insertError.message}`);
-      } else {
-        results.saved++;
-      }
-
-      await new Promise((r) => setTimeout(r, 500));
-    } catch (e) {
-      results.errors.push(`Processing error: ${String(e)}`);
-    }
-  }
-
-  return new Response(JSON.stringify(results), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
 });
