@@ -47,7 +47,7 @@ export default function NewsPage() {
       .select('*')
       .eq('is_featured', true)
       .order('published_at', { ascending: false })
-      .limit(3)
+      .limit(4)
       .then(({ data }) => setFeatured(data ?? []));
   }, []);
 
@@ -109,7 +109,7 @@ export default function NewsPage() {
             {featured.length > 0 && activeCategory === 'All' && !search && (
               <section className="mb-12">
                 <h2 className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-4">Featured</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {featured.map((article) => (
                     <NewsCard key={article.id} article={article} featured />
                   ))}

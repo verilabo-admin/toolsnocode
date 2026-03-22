@@ -25,6 +25,7 @@ const RSS_SOURCES: Array<{ url: string; category: string; source: string }> = [
   { url: "https://www.wired.com/feed/rss", source: "Wired", category: "Policy" },
   { url: "https://rss.slashdot.org/Slashdot/slashAI", source: "Slashdot AI", category: "AI Models" },
   { url: "https://www.infoq.com/ai-ml-data-eng/articles.atom", source: "InfoQ", category: "Research" },
+  { url: "https://www.testingcatalog.com/rss/", source: "Testing Catalog", category: "AI Models" },
 ];
 
 const AI_KEYWORDS = [
