@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { ExternalLink, Calendar, Tag } from 'lucide-react';
 import type { NewsArticle } from '../../types';
 
@@ -5,7 +6,7 @@ const categoryColors: Record<string, string> = {
   'AI Models': 'bg-sky-500/15 text-sky-400 border-sky-500/20',
   'No-Code Tools': 'bg-brand-500/15 text-brand-400 border-brand-500/20',
   'Industry': 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  'Research': 'bg-violet-500/15 text-violet-400 border-violet-500/20',
+  'Research': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
   'Policy': 'bg-rose-500/15 text-rose-400 border-rose-500/20',
 };
 
@@ -25,11 +26,10 @@ export default function NewsCard({ article, featured = false }: NewsCardProps) {
 
   if (featured) {
     return (
-      <a
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        to={`/news/${article.slug}`}
         className="group block rounded-2xl bg-surface-900 border border-surface-700/50 hover:border-surface-600/80 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5"
+        aria-label={`Read: ${article.title}`}
       >
         <div className="aspect-[16/7] bg-surface-800 relative overflow-hidden">
           {article.image_url ? (
@@ -37,6 +37,7 @@ export default function NewsCard({ article, featured = false }: NewsCardProps) {
               src={article.image_url}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-800 to-surface-900">
@@ -58,7 +59,7 @@ export default function NewsCard({ article, featured = false }: NewsCardProps) {
             <span className="font-medium text-surface-400">{article.source}</span>
             <span>·</span>
             <Calendar className="w-3 h-3" />
-            <span>{formattedDate}</span>
+            <time dateTime={article.published_at}>{formattedDate}</time>
           </div>
 
           <h3 className="text-base font-semibold text-surface-100 group-hover:text-brand-400 transition-colors leading-snug mb-2">
@@ -76,17 +77,24 @@ export default function NewsCard({ article, featured = false }: NewsCardProps) {
             ))}
           </div>
         </div>
-      </a>
+      </Link>
     );
   }
 
   return (
-    <a
-      href={article.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      to={`/news/${article.slug}`}
       className="group flex gap-4 p-4 rounded-xl bg-surface-900 border border-surface-700/50 hover:border-surface-600/80 transition-all duration-200 hover:bg-surface-800/60"
+      aria-label={`Read: ${article.title}`}
     >
+      {article.image_url && (
+        <img
+          src={article.image_url}
+          alt={article.title}
+          className="w-16 h-14 rounded-lg object-cover shrink-0"
+          loading="lazy"
+        />
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
           <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border ${colorClass}`}>
@@ -94,7 +102,7 @@ export default function NewsCard({ article, featured = false }: NewsCardProps) {
           </span>
           <span className="text-xs text-surface-500">{article.source}</span>
           <span className="text-xs text-surface-600">·</span>
-          <span className="text-xs text-surface-600">{formattedDate}</span>
+          <time dateTime={article.published_at} className="text-xs text-surface-600">{formattedDate}</time>
         </div>
 
         <h3 className="text-sm font-semibold text-surface-200 group-hover:text-brand-400 transition-colors leading-snug mb-1">
@@ -116,6 +124,6 @@ export default function NewsCard({ article, featured = false }: NewsCardProps) {
       <div className="shrink-0 self-start mt-1">
         <ExternalLink className="w-3.5 h-3.5 text-surface-600 group-hover:text-surface-300 transition-colors" />
       </div>
-    </a>
+    </Link>
   );
 }

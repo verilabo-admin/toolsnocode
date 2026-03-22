@@ -22,6 +22,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import NewsPage from './pages/NewsPage';
+import NewsDetailPage from './pages/NewsDetailPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { PricingPage } from './pages/PricingPage';
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="projects/:slug/edit" element={<ProjectFormPage />} />
             <Route path="projects/:slug" element={<ProjectDetailPage />} />
             <Route path="news" element={<NewsPage />} />
+            <Route path="news/:slug" element={<NewsDetailPage />} />
             <Route path="legal/privacy" element={<PrivacyPolicyPage />} />
             <Route path="legal/terms" element={<TermsOfServicePage />} />
             <Route path="legal/cookies" element={<CookiePolicyPage />} />

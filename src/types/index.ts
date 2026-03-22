@@ -100,6 +100,7 @@ export interface Favorite {
 
 export interface NewsArticle {
   id: string;
+  slug: string;
   title: string;
   summary: string;
   content: string | null;
