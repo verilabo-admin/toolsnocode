@@ -179,7 +179,7 @@ export function PricingPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold text-white">{formatPrice(product.price)}</span>
-                    <span className="text-surface-500">/month</span>
+                    <span className="text-surface-500">/year</span>
                   </div>
                   <p className="text-sm text-surface-500 mt-2">{product.description}</p>
                 </div>
