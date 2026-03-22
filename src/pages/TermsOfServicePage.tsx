@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 const LAST_UPDATED = 'March 21, 2025';
 const SITE_NAME = 'ToolsNoCode';
@@ -7,6 +8,12 @@ const CONTACT_EMAIL = 'legal@toolsnocode.com';
 const SITE_URL = 'toolsnocode.com';
 
 export default function TermsOfServicePage() {
+  useSEO({
+    title: 'Terms of Service',
+    description: 'Read the ToolsNoCode terms of service. Understand the rules and conditions for using our platform.',
+    url: '/legal/terms',
+  });
+
   return (
     <div className="min-h-screen bg-surface-950">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">

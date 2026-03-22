@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 const LAST_UPDATED = 'March 21, 2025';
 const SITE_NAME = 'ToolsNoCode';
@@ -7,6 +8,12 @@ const CONTACT_EMAIL = 'privacy@toolsnocode.com';
 const SITE_URL = 'toolsnocode.com';
 
 export default function PrivacyPolicyPage() {
+  useSEO({
+    title: 'Privacy Policy',
+    description: 'Read the ToolsNoCode privacy policy. Learn how we collect, use, and protect your personal data in compliance with GDPR.',
+    url: '/legal/privacy',
+  });
+
   return (
     <div className="min-h-screen bg-surface-950">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">

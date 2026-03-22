@@ -4,6 +4,7 @@ import { Heart, Wrench, Users, BookOpen, FolderOpen, ArrowRight } from 'lucide-r
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
+import { useSEO } from '../hooks/useSEO';
 import type { Tool, Expert, Tutorial, Project } from '../types';
 import ToolCard from '../components/ui/ToolCard';
 import ExpertCard from '../components/ui/ExpertCard';
@@ -23,6 +24,13 @@ export default function FavoritesPage() {
   const { user, loading: authLoading } = useAuth();
   const { favorites, loading: favsLoading } = useFavorites();
   const [activeTab, setActiveTab] = useState<TabType>('tools');
+
+  useSEO({
+    title: 'My Favorites',
+    description: 'Your saved tools, experts, tutorials, and projects on ToolsNoCode.',
+    url: '/favorites',
+    noindex: true,
+  });
 
   const [toolItems, setToolItems] = useState<Tool[]>([]);
   const [expertItems, setExpertItems] = useState<Expert[]>([]);

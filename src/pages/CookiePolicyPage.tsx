@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Cookie } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 const LAST_UPDATED = 'March 21, 2025';
 const SITE_NAME = 'ToolsNoCode';
@@ -35,6 +36,12 @@ const cookieTable: CookieRow[] = [
 ];
 
 export default function CookiePolicyPage() {
+  useSEO({
+    title: 'Cookie Policy',
+    description: 'Learn about the cookies used on ToolsNoCode, how we use them, and how you can manage your preferences.',
+    url: '/legal/cookies',
+  });
+
   return (
     <div className="min-h-screen bg-surface-950">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">

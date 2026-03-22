@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
-const SITE_NAME = 'ToolsNoCode';
-const BASE_URL = 'https://toolsnocode.com';
+export const SITE_NAME = 'ToolsNoCode';
+export const BASE_URL = 'https://toolsnocode.com';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 const TWITTER_HANDLE = '@Nocodeboy';
 
@@ -24,6 +24,12 @@ function setMeta(name: string, content: string, isProperty = false) {
     document.head.appendChild(el);
   }
   el.setAttribute('content', content);
+}
+
+function removeMeta(name: string, isProperty = false) {
+  const attr = isProperty ? 'property' : 'name';
+  const el = document.querySelector(`meta[${attr}="${name}"]`);
+  if (el) el.remove();
 }
 
 function setLink(rel: string, href: string) {
@@ -57,6 +63,7 @@ export function useSEO({ title, description, image, url, type = 'website', noind
     const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - Discover the Best AI & No-Code Tools`;
     const fullDescription = description || 'The ultimate discovery hub for AI and No-Code tools. Compare stacks, find experts, learn tutorials, and showcase projects built without code.';
     const fullImage = image || DEFAULT_OG_IMAGE;
+    const isDefaultImage = fullImage === DEFAULT_OG_IMAGE;
     const fullUrl = url ? `${BASE_URL}${url}` : BASE_URL;
 
     document.title = fullTitle;
@@ -69,12 +76,24 @@ export function useSEO({ title, description, image, url, type = 'website', noind
     setMeta('og:image', fullImage, true);
     setMeta('og:url', fullUrl, true);
     setMeta('og:type', type, true);
+    setMeta('og:site_name', SITE_NAME, true);
+    setMeta('og:locale', 'en_US', true);
+    setMeta('og:image:alt', fullTitle, true);
+
+    if (isDefaultImage) {
+      setMeta('og:image:width', '1200', true);
+      setMeta('og:image:height', '630', true);
+    } else {
+      removeMeta('og:image:width', true);
+      removeMeta('og:image:height', true);
+    }
 
     setMeta('twitter:title', fullTitle);
     setMeta('twitter:description', fullDescription);
     setMeta('twitter:image', fullImage);
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:site', TWITTER_HANDLE);
+    setMeta('twitter:creator', TWITTER_HANDLE);
 
     setLink('canonical', fullUrl);
 

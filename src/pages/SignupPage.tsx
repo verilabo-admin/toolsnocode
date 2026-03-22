@@ -1,15 +1,13 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { SignupForm } from '../components/auth/SignupForm';
+import { useSEO } from '../hooks/useSEO';
 
 export function SignupPage() {
-  return (
-    <>
-      <Helmet>
-        <title>Sign Up - ToolsNoCode</title>
-        <meta name="description" content="Create your ToolsNoCode account" />
-      </Helmet>
-      <SignupForm />
-    </>
-  );
+  useSEO({
+    title: 'Create Account',
+    description: 'Create a free ToolsNoCode account to publish tools, tutorials, and connect with the no-code community.',
+    url: '/signup',
+    noindex: true,
+  });
+
+  return <SignupForm />;
 }

@@ -3,11 +3,19 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2, Plus, X, Rocket, TrendingUp, Star, ArrowRight, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useSEO } from '../hooks/useSEO';
 import ImageUploader from '../components/ui/ImageUploader';
 import type { Category } from '../types';
 
 export default function ToolFormPage() {
   const { slug } = useParams();
+
+  useSEO({
+    title: slug ? 'Edit Tool' : 'Submit a New Tool',
+    description: 'Submit or edit a tool listing on ToolsNoCode.',
+    url: slug ? `/tools/${slug}/edit` : '/tools/new',
+    noindex: true,
+  });
   const isEdit = Boolean(slug);
   const navigate = useNavigate();
   const { user } = useAuth();

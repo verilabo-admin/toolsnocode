@@ -3,11 +3,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useSEO } from '../hooks/useSEO';
 import ImageUploader from '../components/ui/ImageUploader';
 import type { Tool } from '../types';
 
 export default function ExpertFormPage() {
   const { slug } = useParams();
+
+  useSEO({
+    title: slug ? 'Edit Expert Profile' : 'Create Expert Profile',
+    description: 'Create or edit an expert profile on ToolsNoCode.',
+    url: slug ? `/experts/${slug}/edit` : '/experts/new',
+    noindex: true,
+  });
   const isEdit = Boolean(slug);
   const navigate = useNavigate();
   const { user } = useAuth();

@@ -3,11 +3,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useSEO } from '../hooks/useSEO';
 import ImageUploader from '../components/ui/ImageUploader';
 import type { Tool } from '../types';
 
 export default function ProjectFormPage() {
   const { slug } = useParams();
+
+  useSEO({
+    title: slug ? 'Edit Project' : 'Submit a Project',
+    description: 'Submit or edit a project showcase on ToolsNoCode.',
+    url: slug ? `/projects/${slug}/edit` : '/projects/new',
+    noindex: true,
+  });
   const isEdit = Boolean(slug);
   const navigate = useNavigate();
   const { user } = useAuth();

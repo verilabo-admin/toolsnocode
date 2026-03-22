@@ -10,8 +10,9 @@ const PAGE_SIZE = 20;
 
 export default function NewsPage() {
   useSEO({
-    title: 'AI & No-Code News | ToolsNoCode',
+    title: 'AI & No-Code News',
     description: 'Stay up to date with the latest AI model releases, no-code tool updates, industry moves and research from the world of artificial intelligence.',
+    url: '/news',
   });
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);

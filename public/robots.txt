@@ -2,11 +2,15 @@ User-agent: *
 Allow: /
 
 Disallow: /auth
+Disallow: /account
 Disallow: /favorites
+Disallow: /success
+Disallow: /login
+Disallow: /signup
 Disallow: /tools/new
 Disallow: /experts/new
 Disallow: /tutorials/new
 Disallow: /projects/new
 Disallow: /*/edit
 
-Sitemap: https://toolsnocode.com/sitemap.xml
+Sitemap: https://exlupbihqexeeyxwmveh.supabase.co/functions/v1/sitemap

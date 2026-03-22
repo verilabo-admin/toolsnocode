@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import Layout from './components/layout/Layout';
@@ -23,6 +23,7 @@ import CookiePolicyPage from './pages/CookiePolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import NewsPage from './pages/NewsPage';
 import NewsDetailPage from './pages/NewsDetailPage';
+import NotFoundPage from './pages/NotFoundPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { PricingPage } from './pages/PricingPage';
@@ -70,7 +71,7 @@ export default function App() {
             <Route path="legal/privacy" element={<PrivacyPolicyPage />} />
             <Route path="legal/terms" element={<TermsOfServicePage />} />
             <Route path="legal/cookies" element={<CookiePolicyPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </AuthProvider>

@@ -3,9 +3,17 @@ import { Navigate } from 'react-router-dom';
 import { Zap, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleButton } from '../components/auth/GoogleButton';
+import { useSEO } from '../hooks/useSEO';
 
 export default function AuthPage() {
   const { user, loading: authLoading } = useAuth();
+
+  useSEO({
+    title: 'Sign In',
+    description: 'Sign in or create an account on ToolsNoCode to manage your tools, favorites, and content.',
+    url: '/auth',
+    noindex: true,
+  });
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

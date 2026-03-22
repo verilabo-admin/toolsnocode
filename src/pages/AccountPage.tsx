@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useSEO } from '../hooks/useSEO';
 
 import type { Tool, Expert, Tutorial, Project, ClaimRequest } from '../types';
 import ToolCard from '../components/ui/ToolCard';
@@ -29,6 +30,13 @@ const tabs: { key: TabKey; label: string; icon: typeof User }[] = [
 export default function AccountPage() {
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('profile');
+
+  useSEO({
+    title: 'My Account',
+    description: 'Manage your ToolsNoCode account, tools, expert profiles, tutorials, and projects.',
+    url: '/account',
+    noindex: true,
+  });
 
   const [tools, setTools] = useState<Tool[]>([]);
   const [experts, setExperts] = useState<Expert[]>([]);

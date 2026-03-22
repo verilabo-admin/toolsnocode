@@ -1,15 +1,13 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { LoginForm } from '../components/auth/LoginForm';
+import { useSEO } from '../hooks/useSEO';
 
 export function LoginPage() {
-  return (
-    <>
-      <Helmet>
-        <title>Sign In - ToolsNoCode</title>
-        <meta name="description" content="Sign in to your ToolsNoCode account" />
-      </Helmet>
-      <LoginForm />
-    </>
-  );
+  useSEO({
+    title: 'Sign In',
+    description: 'Sign in to your ToolsNoCode account to manage tools, favorites, and content.',
+    url: '/login',
+    noindex: true,
+  });
+
+  return <LoginForm />;
 }

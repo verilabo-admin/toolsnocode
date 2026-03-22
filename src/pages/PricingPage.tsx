@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Rocket, TrendingUp, Play, Award, BarChart3, Search,
@@ -105,10 +105,24 @@ export function PricingPage() {
   const [toolsLoading, setToolsLoading] = useState(false);
   const product = STRIPE_PRODUCTS[0];
 
+  const faqJsonLd = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.a,
+      },
+    })),
+  }), []);
+
   useSEO({
     title: 'Boost Your Tool',
     description: 'Give your tool maximum visibility on ToolsNoCode. Priority positioning, featured placement, demo videos, and more.',
     url: '/pricing',
+    jsonLd: faqJsonLd,
   });
 
   useEffect(() => {

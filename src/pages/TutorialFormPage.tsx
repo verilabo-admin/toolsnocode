@@ -3,11 +3,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useSEO } from '../hooks/useSEO';
 import ImageUploader from '../components/ui/ImageUploader';
 import type { Tool } from '../types';
 
 export default function TutorialFormPage() {
   const { slug } = useParams();
+
+  useSEO({
+    title: slug ? 'Edit Tutorial' : 'Create Tutorial',
+    description: 'Create or edit a tutorial on ToolsNoCode.',
+    url: slug ? `/tutorials/${slug}/edit` : '/tutorials/new',
+    noindex: true,
+  });
   const isEdit = Boolean(slug);
   const navigate = useNavigate();
   const { user } = useAuth();
