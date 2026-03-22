@@ -172,7 +172,7 @@ async function parseRSSFeed(feedUrl: string): Promise<Array<{ title: string; url
       }
     }
 
-    return items.slice(0, 10);
+    return items.slice(0, 30);
   } catch {
     return [];
   }
@@ -234,6 +234,8 @@ Write only the article text and the TAGS line, nothing else.`;
   return { rewrittenContent: content, tags };
 }
 
+const TRUSTED_SOURCES = new Set(["Testing Catalog"]);
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -249,6 +251,12 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    let body: { days_back?: number; max_items?: number } = {};
+    try { body = await req.json(); } catch { /* no body */ }
+
+    const daysBack = body.days_back ?? 3;
+    const maxItems = body.max_items ?? 10;
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -262,7 +270,7 @@ Deno.serve(async (req: Request) => {
     };
 
     const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - 3);
+    cutoffDate.setDate(cutoffDate.getDate() - daysBack);
 
     const allArticles: Array<RSSItem> = [];
 
@@ -278,7 +286,8 @@ Deno.serve(async (req: Request) => {
 
         const category = guessCategory(item.title, item.description) || feed.category;
 
-        if (!isAIRelated(item.title, item.description)) continue;
+        const isTrusted = TRUSTED_SOURCES.has(feed.source);
+        if (!isTrusted && !isAIRelated(item.title, item.description)) continue;
 
         allArticles.push({
           title: item.title,
@@ -298,7 +307,7 @@ Deno.serve(async (req: Request) => {
       return true;
     });
 
-    const toProcess = unique.slice(0, 10);
+    const toProcess = unique.slice(0, maxItems);
 
     for (const item of toProcess) {
       try {
