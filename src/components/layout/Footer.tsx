@@ -12,12 +12,14 @@ const footerLinks = {
     { label: 'Experts', href: '/experts' },
     { label: 'Projects', href: '/projects' },
     { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Submit a Tool', href: '/tools/new' },
   ],
   Resources: [
     { label: 'Best AI Tools', href: '/tools?category=ai' },
     { label: 'Best No-Code Tools', href: '/tools?category=no-code' },
     { label: 'Tutorials', href: '/tutorials' },
     { label: 'News', href: '/news' },
+    { label: 'Boost Your Tool', href: '/pricing' },
   ],
 };
 
