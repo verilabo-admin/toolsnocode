@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Home, ArrowLeft, Search } from 'lucide-react';
+import { Home, Search } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 
 export default function NotFoundPage() {

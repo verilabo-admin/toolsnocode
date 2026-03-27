@@ -173,8 +173,6 @@ export function PricingPage() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
 
-  const canCheckout = user && selectedToolId && !isAlreadyBoosted;
-
   const renderBoostButton = (className: string) => {
     if (!user) {
       return (

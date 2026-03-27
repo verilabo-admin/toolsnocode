@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Newspaper, Search, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useSEO } from '../hooks/useSEO';
@@ -25,7 +25,7 @@ export default function NewsPage() {
   const [activeCategory, setActiveCategory] = useState('All');
   const pageRef = useRef(0);
 
-  function buildQuery(from: number, to: number) {
+  const buildQuery = useCallback((from: number, to: number) => {
     let query = supabase
       .from('news')
       .select('*', { count: 'exact' })
@@ -40,7 +40,7 @@ export default function NewsPage() {
     }
 
     return query.range(from, to);
-  }
+  }, [activeCategory, search]);
 
   useEffect(() => {
     supabase
@@ -63,7 +63,7 @@ export default function NewsPage() {
       setLoading(false);
     }
     load();
-  }, [activeCategory, search]);
+  }, [buildQuery]);
 
   async function loadMore() {
     if (loadingMore || !hasMore) return;

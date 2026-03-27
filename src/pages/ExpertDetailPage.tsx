@@ -14,7 +14,7 @@ export default function ExpertDetailPage() {
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [expert, setExpert] = useState<Expert | null>(null);
-  const [tools, setTools] = useState<Tool[]>([]);
+  const [tools, setTools] = useState<(Tool & { _proficiency?: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   const handleClaimed = () => {
@@ -45,7 +45,7 @@ export default function ExpertDetailPage() {
         .eq('expert_id', expertData.id);
 
       if (toolsData) {
-        setTools(toolsData.map((row: any) => ({ ...row.tool, _proficiency: row.proficiency_level })).filter(Boolean));
+        setTools(toolsData.map((row) => ({ ...(row.tool as unknown as Tool), _proficiency: row.proficiency_level as string })).filter((t) => t.id));
       }
 
       setLoading(false);
@@ -183,7 +183,7 @@ export default function ExpertDetailPage() {
         <div className="glass-card p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Tools & Skills</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {tools.map((tool: any) => (
+            {tools.map((tool) => (
               <Link key={tool.id} to={`/tools/${tool.slug}`} className="flex items-center gap-3 p-3 rounded-xl bg-surface-800/50 hover:bg-surface-800 border border-surface-700/30 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-surface-700 border border-surface-600/50 overflow-hidden flex-shrink-0 flex items-center justify-center">
                   {tool.logo_url ? (

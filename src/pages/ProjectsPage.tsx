@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -28,7 +28,7 @@ export default function ProjectsPage() {
 
   const search = searchParams.get('q') || '';
 
-  function buildQuery(from: number, to: number) {
+  const buildQuery = useCallback((from: number, to: number) => {
     let query = supabase
       .from('projects')
       .select('*, project_tools(tool:tools(*))', { count: 'exact' })
@@ -39,13 +39,13 @@ export default function ProjectsPage() {
     }
 
     return query.range(from, to);
-  }
+  }, [search]);
 
-  function mapProjects(data: any[]) {
-    return data.map((p: any) => ({
+  function mapProjects(data: Record<string, unknown>[]) {
+    return data.map((p) => ({
       ...p,
-      tools: p.project_tools?.map((pt: any) => pt.tool).filter(Boolean) || [],
-    }));
+      tools: (p.project_tools as { tool: Tool }[] | undefined)?.map((pt) => pt.tool).filter(Boolean) || [],
+    })) as (Project & { tools: Tool[] })[];
   }
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function ProjectsPage() {
       setLoading(false);
     }
     load();
-  }, [search]);
+  }, [buildQuery]);
 
   async function loadMore() {
     if (loadingMore || !hasMore) return;

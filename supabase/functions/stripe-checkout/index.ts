@@ -11,12 +11,15 @@ const stripe = new Stripe(stripeSecret, {
   },
 });
 
+const ALLOWED_ORIGINS = ['https://toolsnocode.com', 'http://localhost:5173', 'http://localhost:4173'];
+
 // Helper function to create responses with CORS headers
-function corsResponse(body: string | object | null, status = 200) {
+function corsResponse(body: string | object | null, status = 200, requestOrigin?: string) {
+  const origin = requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
   const headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
   };
 
   // For 204 No Content, don't include Content-Type or body
@@ -34,13 +37,14 @@ function corsResponse(body: string | object | null, status = 200) {
 }
 
 Deno.serve(async (req) => {
+  const reqOrigin = req.headers.get('Origin') ?? undefined;
   try {
     if (req.method === 'OPTIONS') {
-      return corsResponse({}, 204);
+      return corsResponse({}, 204, reqOrigin);
     }
 
     if (req.method !== 'POST') {
-      return corsResponse({ error: 'Method not allowed' }, 405);
+      return corsResponse({ error: 'Method not allowed' }, 405, reqOrigin);
     }
 
     const { price_id, success_url, cancel_url, mode, tool_id } = await req.json();
@@ -56,7 +60,19 @@ Deno.serve(async (req) => {
     );
 
     if (error) {
-      return corsResponse({ error }, 400);
+      return corsResponse({ error }, 400, reqOrigin);
+    }
+
+    // Validate redirect URLs to prevent open redirect attacks
+    for (const url of [success_url, cancel_url]) {
+      try {
+        const parsed = new URL(url);
+        if (!ALLOWED_ORIGINS.some((origin) => parsed.origin === origin)) {
+          return corsResponse({ error: `Invalid redirect URL: ${url}` }, 400, reqOrigin);
+        }
+      } catch {
+        return corsResponse({ error: `Malformed URL: ${url}` }, 400, reqOrigin);
+      }
     }
 
     const authHeader = req.headers.get('Authorization')!;
@@ -67,11 +83,11 @@ Deno.serve(async (req) => {
     } = await supabase.auth.getUser(token);
 
     if (getUserError) {
-      return corsResponse({ error: 'Failed to authenticate user' }, 401);
+      return corsResponse({ error: 'Failed to authenticate user' }, 401, reqOrigin);
     }
 
     if (!user) {
-      return corsResponse({ error: 'User not found' }, 404);
+      return corsResponse({ error: 'User not found' }, 404, reqOrigin);
     }
 
     const { data: customer, error: getCustomerError } = await supabase
@@ -84,7 +100,7 @@ Deno.serve(async (req) => {
     if (getCustomerError) {
       console.error('Failed to fetch customer information from the database', getCustomerError);
 
-      return corsResponse({ error: 'Failed to fetch customer information' }, 500);
+      return corsResponse({ error: 'Failed to fetch customer information' }, 500, reqOrigin);
     }
 
     let customerId;
@@ -118,7 +134,7 @@ Deno.serve(async (req) => {
           console.error('Failed to clean up after customer mapping error:', deleteError);
         }
 
-        return corsResponse({ error: 'Failed to create customer mapping' }, 500);
+        return corsResponse({ error: 'Failed to create customer mapping' }, 500, reqOrigin);
       }
 
       if (mode === 'subscription') {
@@ -137,7 +153,7 @@ Deno.serve(async (req) => {
             console.error('Failed to delete Stripe customer after subscription creation error:', deleteError);
           }
 
-          return corsResponse({ error: 'Unable to save the subscription in the database' }, 500);
+          return corsResponse({ error: 'Unable to save the subscription in the database' }, 500, reqOrigin);
         }
       }
 
@@ -158,7 +174,7 @@ Deno.serve(async (req) => {
         if (getSubscriptionError) {
           console.error('Failed to fetch subscription information from the database', getSubscriptionError);
 
-          return corsResponse({ error: 'Failed to fetch subscription information' }, 500);
+          return corsResponse({ error: 'Failed to fetch subscription information' }, 500, reqOrigin);
         }
 
         if (!subscription) {
@@ -171,7 +187,7 @@ Deno.serve(async (req) => {
           if (createSubscriptionError) {
             console.error('Failed to create subscription record for existing customer', createSubscriptionError);
 
-            return corsResponse({ error: 'Failed to create subscription record for existing customer' }, 500);
+            return corsResponse({ error: 'Failed to create subscription record for existing customer' }, 500, reqOrigin);
           }
         }
       }
@@ -202,17 +218,18 @@ Deno.serve(async (req) => {
 
     console.log(`Created checkout session ${session.id} for customer ${customerId}`);
 
-    return corsResponse({ sessionId: session.id, url: session.url });
-  } catch (error: any) {
-    console.error(`Checkout error: ${error.message}`);
-    return corsResponse({ error: error.message }, 500);
+    return corsResponse({ sessionId: session.id, url: session.url }, 200, reqOrigin);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Checkout error: ${message}`);
+    return corsResponse({ error: message }, 500, reqOrigin);
   }
 });
 
 type ExpectedType = 'string' | { values: string[] };
 type Expectations<T> = { [K in keyof T]: ExpectedType };
 
-function validateParameters<T extends Record<string, any>>(values: T, expected: Expectations<T>): string | undefined {
+function validateParameters<T extends Record<string, unknown>>(values: T, expected: Expectations<T>): string | undefined {
   for (const parameter in values) {
     const expectation = expected[parameter];
     const value = values[parameter];

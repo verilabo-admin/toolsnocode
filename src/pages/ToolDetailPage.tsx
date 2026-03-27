@@ -71,13 +71,13 @@ export default function ToolDetailPage() {
       if (tutRes.data) setTutorials(tutRes.data);
       if (expertRes.data) {
         const mapped = expertRes.data
-          .map((row: any) => row.expert)
+          .map((row) => row.expert as unknown as Expert)
           .filter(Boolean);
         setExperts(mapped);
       }
       if (projRes.data) {
         const mapped = projRes.data
-          .map((row: any) => row.project)
+          .map((row) => row.project as unknown as Project)
           .filter(Boolean);
         setProjects(mapped);
       }

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, ExternalLink, Tag, Clock, Share2, Twitter, Linkedin, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Calendar, ExternalLink, Tag, Clock, Twitter, Linkedin, Copy, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useSEO } from '../hooks/useSEO';
 import type { NewsArticle } from '../types';

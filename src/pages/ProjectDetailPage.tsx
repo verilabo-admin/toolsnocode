@@ -37,7 +37,7 @@ export default function ProjectDetailPage() {
           .eq('project_id', data.id);
 
         if (toolsData) {
-          setTools(toolsData.map((row: any) => row.tool).filter(Boolean));
+          setTools(toolsData.map((row) => row.tool as unknown as Tool).filter(Boolean));
         }
       }
       setLoading(false);

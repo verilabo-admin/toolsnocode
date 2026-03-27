@@ -254,7 +254,6 @@ export default function AccountPage() {
 
 function ProfileTab({ user }: { user: { email?: string } }) {
   const { signOut } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
@@ -283,7 +282,6 @@ function ProfileTab({ user }: { user: { email?: string } }) {
       setPwError(error.message);
     } else {
       setPwSuccess(true);
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     }
