@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { SlidersHorizontal, X, Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -93,7 +93,7 @@ export default function ToolsPage() {
       setLoading(false);
     }
     load();
-  }, [pricingFilter, sortBy, categoryFilter, search, categories]);
+  }, [buildQuery, categoryFilter, categories]);
 
   async function loadMore() {
     if (loadingMore || !hasMore) return;

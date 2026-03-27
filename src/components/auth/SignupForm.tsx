@@ -52,7 +52,7 @@ export function SignupForm() {
           navigate(`/login${nextPath !== '/' ? `?next=${encodeURIComponent(nextPath)}` : ''}`);
         }, 1500);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

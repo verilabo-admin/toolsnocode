@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -28,7 +28,7 @@ export default function ExpertsPage() {
 
   const search = searchParams.get('q') || '';
 
-  function buildQuery(from: number, to: number) {
+  const buildQuery = useCallback((from: number, to: number) => {
     let query = supabase
       .from('experts')
       .select('*', { count: 'exact' })
@@ -39,7 +39,7 @@ export default function ExpertsPage() {
     }
 
     return query.range(from, to);
-  }
+  }, [search]);
 
   useEffect(() => {
     async function load() {
@@ -52,7 +52,7 @@ export default function ExpertsPage() {
       setLoading(false);
     }
     load();
-  }, [search]);
+  }, [buildQuery]);
 
   async function loadMore() {
     if (loadingMore || !hasMore) return;

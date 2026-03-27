@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -32,7 +32,7 @@ export default function TutorialsPage() {
   const typeFilter = searchParams.get('type') || 'all';
   const levelFilter = searchParams.get('level') || 'all';
 
-  function buildQuery(from: number, to: number) {
+  const buildQuery = useCallback((from: number, to: number) => {
     let query = supabase
       .from('tutorials')
       .select('*, tool:tools(*)', { count: 'exact' })
@@ -49,7 +49,7 @@ export default function TutorialsPage() {
     }
 
     return query.range(from, to);
-  }
+  }, [typeFilter, levelFilter, search]);
 
   useEffect(() => {
     async function load() {
@@ -62,7 +62,7 @@ export default function TutorialsPage() {
       setLoading(false);
     }
     load();
-  }, [typeFilter, levelFilter, search]);
+  }, [buildQuery]);
 
   async function loadMore() {
     if (loadingMore || !hasMore) return;

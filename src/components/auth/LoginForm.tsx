@@ -30,7 +30,7 @@ export function LoginForm() {
       } else {
         navigate(nextPath);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
