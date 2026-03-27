@@ -33,7 +33,7 @@ export default function FavoriteButton({ isFavorite, onToggle, size = 'md' }: Fa
           ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
           : 'bg-surface-800/80 text-surface-500 hover:text-rose-400 hover:bg-rose-500/10'
       }`}
-      title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
     >
       <Heart className={`${iconSize} ${isFavorite ? 'fill-current' : ''}`} />
     </button>

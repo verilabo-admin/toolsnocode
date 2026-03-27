@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Clock, BookOpen, Video, FileText, GraduationCap } from 'lucide-react';
 import type { Tutorial } from '../../types';
@@ -19,7 +20,7 @@ interface TutorialCardProps {
   tutorial: Tutorial;
 }
 
-export default function TutorialCard({ tutorial }: TutorialCardProps) {
+export default memo(function TutorialCard({ tutorial }: TutorialCardProps) {
   const Icon = typeIcons[tutorial.content_type] || FileText;
 
   return (
@@ -30,6 +31,7 @@ export default function TutorialCard({ tutorial }: TutorialCardProps) {
             src={tutorial.thumbnail_url}
             alt={tutorial.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-800 to-surface-900">
@@ -73,4 +75,4 @@ export default function TutorialCard({ tutorial }: TutorialCardProps) {
       </div>
     </Link>
   );
-}
+});

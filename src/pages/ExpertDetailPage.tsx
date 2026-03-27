@@ -113,7 +113,7 @@ export default function ExpertDetailPage() {
         <div className="flex flex-col sm:flex-row items-start gap-5">
           <div className="w-20 h-20 rounded-full bg-surface-800 border-2 border-surface-700/50 overflow-hidden flex-shrink-0">
             {expert.avatar_url ? (
-              <img src={expert.avatar_url} alt={expert.name} className="w-full h-full object-cover" />
+              <img src={expert.avatar_url} alt={expert.name} className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <span className="text-2xl font-bold text-surface-400">{expert.name.charAt(0)}</span>
@@ -187,7 +187,7 @@ export default function ExpertDetailPage() {
               <Link key={tool.id} to={`/tools/${tool.slug}`} className="flex items-center gap-3 p-3 rounded-xl bg-surface-800/50 hover:bg-surface-800 border border-surface-700/30 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-surface-700 border border-surface-600/50 overflow-hidden flex-shrink-0 flex items-center justify-center">
                   {tool.logo_url ? (
-                    <img src={tool.logo_url} alt={tool.name} className="w-full h-full object-cover" />
+                    <img src={tool.logo_url} alt={tool.name} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <span className="text-sm font-bold text-surface-400">{tool.name.charAt(0)}</span>
                   )}

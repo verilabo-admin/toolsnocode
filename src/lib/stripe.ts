@@ -28,7 +28,8 @@ export async function createCheckoutSession(priceId: string, mode: 'subscription
   });
 
   if (!response.ok) {
-    throw new Error('Failed to create checkout session');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Checkout failed (${response.status})`);
   }
 
   return response.json();

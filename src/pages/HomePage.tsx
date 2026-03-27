@@ -22,28 +22,32 @@ export default function HomePage() {
 
   useEffect(() => {
     async function load() {
-      const [featuredRes, newestRes, trendingRes, catRes, toolCount, expertCount, tutorialCount, projectCount] =
-        await Promise.all([
-          supabase.from('tools').select('*').or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
-          supabase.from('tools').select('*').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
-          supabase.from('tools').select('*').eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false }).limit(6),
-          supabase.from('categories').select('*').is('parent_id', null).order('sort_order'),
-          supabase.from('tools').select('id', { count: 'exact', head: true }),
-          supabase.from('experts').select('id', { count: 'exact', head: true }),
-          supabase.from('tutorials').select('id', { count: 'exact', head: true }),
-          supabase.from('projects').select('id', { count: 'exact', head: true }),
-        ]);
+      try {
+        const [featuredRes, newestRes, trendingRes, catRes, toolCount, expertCount, tutorialCount, projectCount] =
+          await Promise.all([
+            supabase.from('tools').select('*').or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
+            supabase.from('tools').select('*').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
+            supabase.from('tools').select('*').eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false }).limit(6),
+            supabase.from('categories').select('*').is('parent_id', null).order('sort_order'),
+            supabase.from('tools').select('id', { count: 'exact', head: true }),
+            supabase.from('experts').select('id', { count: 'exact', head: true }),
+            supabase.from('tutorials').select('id', { count: 'exact', head: true }),
+            supabase.from('projects').select('id', { count: 'exact', head: true }),
+          ]);
 
-      if (featuredRes.data) setFeaturedTools(featuredRes.data);
-      if (newestRes.data) setNewestTools(newestRes.data);
-      if (trendingRes.data) setTrendingTools(trendingRes.data);
-      if (catRes.data) setCategories(catRes.data);
-      setStats({
-        tools: toolCount.count || 0,
-        experts: expertCount.count || 0,
-        tutorials: tutorialCount.count || 0,
-        projects: projectCount.count || 0,
-      });
+        if (featuredRes.data) setFeaturedTools(featuredRes.data);
+        if (newestRes.data) setNewestTools(newestRes.data);
+        if (trendingRes.data) setTrendingTools(trendingRes.data);
+        if (catRes.data) setCategories(catRes.data);
+        setStats({
+          tools: toolCount.count || 0,
+          experts: expertCount.count || 0,
+          tutorials: tutorialCount.count || 0,
+          projects: projectCount.count || 0,
+        });
+      } catch (err) {
+        console.error('Failed to load homepage data:', err);
+      }
     }
     load();
   }, []);

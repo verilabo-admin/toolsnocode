@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bot, Code2, TrendingUp, Layers, Cpu, Image, Video, Mic,
@@ -65,7 +66,7 @@ interface CategoryCardProps {
   toolCount?: number;
 }
 
-export default function CategoryCard({ category, toolCount }: CategoryCardProps) {
+export default memo(function CategoryCard({ category, toolCount }: CategoryCardProps) {
   const Icon = iconMap[category.icon] || iconMap[category.icon?.toLowerCase()] || Layers;
 
   return (
@@ -84,4 +85,4 @@ export default function CategoryCard({ category, toolCount }: CategoryCardProps)
       )}
     </Link>
   );
-}
+});

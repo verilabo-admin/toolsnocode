@@ -137,6 +137,14 @@ Deno.serve(async (req: Request) => {
         });
       }
 
+      const domainRegex = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+      if (!domainRegex.test(domain)) {
+        return new Response(JSON.stringify({ error: "Invalid domain format" }), {
+          status: 400,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+
       let dnsSuccess = false;
       let dnsError = "";
 

@@ -71,7 +71,7 @@ export default function UpvoteButton({ itemType, itemId, initialCount, size = 'm
     <button
       onClick={handleClick}
       disabled={loading}
-      title={voted ? 'Remove upvote' : 'Upvote'}
+      aria-label={voted ? 'Remove upvote' : 'Upvote'}
       className={`
         inline-flex flex-col items-center justify-center gap-0.5 rounded-xl border transition-all duration-200 font-medium
         disabled:opacity-60

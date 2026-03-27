@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 import type { Project } from '../../types';
@@ -7,7 +8,7 @@ interface ProjectCardProps {
   project: Project;
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default memo(function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Link to={`/projects/${project.slug}`} className="glass-card-hover overflow-hidden group block">
       <div className="aspect-[16/10] bg-surface-800 relative overflow-hidden">
@@ -16,6 +17,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             src={project.screenshot_url}
             alt={project.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-800 to-surface-900">
@@ -57,7 +59,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 title={tool.name}
               >
                 {tool.logo_url ? (
-                  <img src={tool.logo_url} alt={tool.name} className="w-full h-full object-cover" />
+                  <img src={tool.logo_url} alt={tool.name} className="w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 ) : (
                   <span className="text-[10px] font-bold text-surface-500">
                     {tool.name.charAt(0)}
@@ -75,4 +77,4 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       </div>
     </Link>
   );
-}
+});

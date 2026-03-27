@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Star, TrendingUp, ShieldCheck, Rocket } from 'lucide-react';
 import type { Tool } from '../../types';
@@ -14,7 +15,7 @@ interface ToolCardProps {
   tool: Tool;
 }
 
-export default function ToolCard({ tool }: ToolCardProps) {
+export default memo(function ToolCard({ tool }: ToolCardProps) {
   return (
     <Link
       to={`/tools/${tool.slug}`}
@@ -31,7 +32,7 @@ export default function ToolCard({ tool }: ToolCardProps) {
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-xl bg-surface-800 border border-surface-700/50 flex items-center justify-center overflow-hidden flex-shrink-0">
           {tool.logo_url ? (
-            <img src={tool.logo_url} alt={tool.name} className="w-full h-full object-cover rounded-xl" />
+            <img src={tool.logo_url} alt={tool.name} className="w-full h-full object-cover rounded-xl" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           ) : (
             <span className="text-lg font-bold text-surface-400">
               {tool.name.charAt(0)}
@@ -79,4 +80,4 @@ export default function ToolCard({ tool }: ToolCardProps) {
       </div>
     </Link>
   );
-}
+});

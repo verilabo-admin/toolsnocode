@@ -70,6 +70,8 @@ export default function Header() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  aria-label="User menu"
+                  aria-expanded={userMenuOpen}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
                 >
                   <User className="w-4 h-4" />
@@ -137,6 +139,8 @@ export default function Header() {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
               className="md:hidden p-2 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-800/50 transition-colors"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
