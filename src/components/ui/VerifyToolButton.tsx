@@ -31,30 +31,14 @@ export default function VerifyToolButton({
   const [error, setError] = useState('');
   const [verifyResult, setVerifyResult] = useState<{ success: boolean; domain?: string } | null>(null);
 
-  const getFnUrl = () =>
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-tool-dns`;
-
-  const getAuthHeaders = async () => {
-    const { data } = await supabase.auth.getSession();
-    return {
-      Authorization: `Bearer ${data.session?.access_token}`,
-      'Content-Type': 'application/json',
-      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-    };
-  };
-
   const handleGenerateToken = async () => {
     setLoading(true);
     setError('');
     try {
-      const headers = await getAuthHeaders();
-      const res = await fetch(getFnUrl(), {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ tool_id: toolId, action: 'generate_token' }),
+      const { data, error: fnError } = await supabase.functions.invoke('verify-tool-dns', {
+        body: { tool_id: toolId, action: 'generate_token' },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to generate token');
+      if (fnError) throw new Error(fnError.message || 'Failed to generate token');
       setToken(data.token);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to generate token');
@@ -67,14 +51,10 @@ export default function VerifyToolButton({
     setError('');
     setVerifyResult(null);
     try {
-      const headers = await getAuthHeaders();
-      const res = await fetch(getFnUrl(), {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ tool_id: toolId, action: 'verify' }),
+      const { data, error: fnError } = await supabase.functions.invoke('verify-tool-dns', {
+        body: { tool_id: toolId, action: 'verify' },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      if (fnError) throw new Error(fnError.message || 'Verification failed');
       setVerifyResult({ success: data.success, domain: data.domain });
       if (data.success) {
         setIsVerified(true);

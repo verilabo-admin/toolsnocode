@@ -1,9 +1,9 @@
 import { supabase } from './supabase';
 
 export async function createCheckoutSession(priceId: string, mode: 'subscription' | 'payment', toolId?: string) {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (userError || !user) {
     throw new Error('User not authenticated');
   }
 
@@ -18,22 +18,15 @@ export async function createCheckoutSession(priceId: string, mode: 'subscription
     body.tool_id = toolId;
   }
 
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json',
-      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-    },
-    body: JSON.stringify(body),
+  const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+    body,
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `Checkout failed (${response.status})`);
+  if (error) {
+    throw new Error(error.message || 'Checkout failed');
   }
 
-  return response.json();
+  return data;
 }
 
 export async function getUserSubscription() {
