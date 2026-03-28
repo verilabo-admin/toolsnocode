@@ -79,32 +79,14 @@ export default function ClaimButton({ itemType, itemId, itemName, itemWebsite, o
     setDnsError('');
   };
 
-  const getFnUrl = () => `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-tool-dns`;
-
-  const getAuthHeaders = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session?.access_token) {
-      throw new Error('Not authenticated. Please sign in and try again.');
-    }
-    return {
-      Authorization: `Bearer ${data.session.access_token}`,
-      'Content-Type': 'application/json',
-      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-    };
-  };
-
   const handleGenerateDnsToken = async () => {
     setDnsTokenLoading(true);
     setDnsError('');
     try {
-      const headers = await getAuthHeaders();
-      const res = await fetch(getFnUrl(), {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ tool_id: itemId, action: 'generate_token' }),
+      const { data, error } = await supabase.functions.invoke('verify-tool-dns', {
+        body: { tool_id: itemId, action: 'generate_token' },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to generate token');
+      if (error) throw new Error(error.message || 'Failed to generate token');
       setDnsToken(data.token);
     } catch (e) {
       setDnsError(e instanceof Error ? e.message : 'Failed to generate token');
@@ -116,14 +98,10 @@ export default function ClaimButton({ itemType, itemId, itemName, itemWebsite, o
     setDnsVerifying(true);
     setDnsError('');
     try {
-      const headers = await getAuthHeaders();
-      const res = await fetch(getFnUrl(), {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ tool_id: itemId, action: 'verify' }),
+      const { data, error } = await supabase.functions.invoke('verify-tool-dns', {
+        body: { tool_id: itemId, action: 'verify' },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      if (error) throw new Error(error.message || 'Verification failed');
       if (data.success) {
         setDnsSuccess(true);
         setShowForm(false);
