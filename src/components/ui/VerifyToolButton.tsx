@@ -39,6 +39,7 @@ export default function VerifyToolButton({
     return {
       Authorization: `Bearer ${data.session?.access_token}`,
       'Content-Type': 'application/json',
+      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
     };
   };
 
