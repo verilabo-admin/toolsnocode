@@ -1,11 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
+const ALLOWED_ORIGINS = ["https://toolsnocode.com", "http://localhost:5173", "http://localhost:4173"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") ?? "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+  };
+}
 
 function extractMetaTag(html: string, ...attrs: string[]): string | null {
   for (const attr of attrs) {
@@ -97,16 +102,16 @@ Write only the article paragraphs, nothing else.`;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
+    return new Response(null, { status: 200, headers: getCorsHeaders(req) });
   }
 
   try {
     const { newsId } = await req.json();
 
-    if (!newsId) {
-      return new Response(JSON.stringify({ error: "newsId is required" }), {
+    if (!newsId || typeof newsId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newsId)) {
+      return new Response(JSON.stringify({ error: "Valid newsId (UUID) is required" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -124,19 +129,25 @@ Deno.serve(async (req: Request) => {
     if (fetchError || !article) {
       return new Response(JSON.stringify({ error: "Article not found" }), {
         status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
     if (article.content && article.image_url) {
       return new Response(JSON.stringify({ already_enriched: true }), {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
     let html = "";
     try {
+      const urlObj = new URL(article.url);
+      if (!["http:", "https:"].includes(urlObj.protocol)) throw new Error("Invalid protocol");
+      const hostname = urlObj.hostname;
+      if (/^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|localhost|::1|\[::1\])/.test(hostname)) {
+        throw new Error("Private IP");
+      }
       const response = await fetch(article.url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (compatible; ToolsNoCode/1.0)",
@@ -190,15 +201,16 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({ success: true, updates: Object.keys(updates) }),
       {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       }
     );
   } catch (err) {
+    console.error("enrich-news error:", err);
     return new Response(
-      JSON.stringify({ error: String(err) }),
+      JSON.stringify({ error: "Internal server error" }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       }
     );
   }

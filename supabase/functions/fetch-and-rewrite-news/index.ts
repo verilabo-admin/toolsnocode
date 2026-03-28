@@ -1,11 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
+const ALLOWED_ORIGINS = ["https://toolsnocode.com", "http://localhost:5173", "http://localhost:4173"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") ?? "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+  };
+}
 
 interface RSSItem {
   title: string;
@@ -106,8 +111,20 @@ function extractMainContent(html: string): string {
   return stripTags(html).slice(0, 5000);
 }
 
+function isPrivateUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:"].includes(parsed.protocol)) return true;
+    const hostname = parsed.hostname;
+    return /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|localhost|::1|\[::1\])/.test(hostname);
+  } catch {
+    return true;
+  }
+}
+
 async function fetchArticleData(url: string): Promise<{ image: string | null; rawContent: string }> {
   try {
+    if (isPrivateUrl(url)) return { image: null, rawContent: "" };
     const res = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; ToolsNoCode/1.0)",
@@ -219,7 +236,8 @@ Write only the article text and the TAGS line, nothing else.`;
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`OpenAI error: ${err}`);
+    console.error("OpenAI API error:", err);
+    throw new Error("Content generation failed");
   }
 
   const data = await res.json();
@@ -238,7 +256,7 @@ const TRUSTED_SOURCES = new Set(["Testing Catalog"]);
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
+    return new Response(null, { status: 200, headers: getCorsHeaders(req) });
   }
 
   try {
@@ -247,15 +265,15 @@ Deno.serve(async (req: Request) => {
     if (!OPENAI_API_KEY) {
       return new Response(JSON.stringify({ error: "Missing OPENAI_API_KEY" }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
     let body: { days_back?: number; max_items?: number } = {};
     try { body = await req.json(); } catch { /* no body */ }
 
-    const daysBack = body.days_back ?? 3;
-    const maxItems = body.max_items ?? 10;
+    const daysBack = Math.min(Math.max(body.days_back ?? 3, 1), 30);
+    const maxItems = Math.min(Math.max(body.max_items ?? 10, 1), 50);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -369,12 +387,13 @@ Deno.serve(async (req: Request) => {
 
     return new Response(JSON.stringify(results), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
+    console.error("fetch-and-rewrite-news error:", err);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

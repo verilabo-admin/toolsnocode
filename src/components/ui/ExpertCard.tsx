@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, MapPin, Globe, ArrowUpRight } from 'lucide-react';
 import type { Expert } from '../../types';
@@ -6,13 +7,13 @@ interface ExpertCardProps {
   expert: Expert;
 }
 
-export default function ExpertCard({ expert }: ExpertCardProps) {
+export default memo(function ExpertCard({ expert }: ExpertCardProps) {
   return (
     <Link to={`/experts/${expert.slug}`} className="glass-card-hover p-6 group block">
       <div className="flex items-start gap-4">
         <div className="w-14 h-14 rounded-full bg-surface-800 border-2 border-surface-700/50 overflow-hidden flex-shrink-0">
           {expert.avatar_url ? (
-            <img src={expert.avatar_url} alt={expert.name} className="w-full h-full object-cover" />
+            <img src={expert.avatar_url} alt={expert.name} className="w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <span className="text-xl font-bold text-surface-400">
@@ -66,4 +67,4 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
       </div>
     </Link>
   );
-}
+});

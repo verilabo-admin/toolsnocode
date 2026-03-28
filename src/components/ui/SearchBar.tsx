@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Search } from 'lucide-react';
 
 interface SearchBarProps {
@@ -7,7 +8,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-export default function SearchBar({ value, onChange, placeholder = 'Search...', className = '' }: SearchBarProps) {
+export default memo(function SearchBar({ value, onChange, placeholder = 'Search...', className = '' }: SearchBarProps) {
   return (
     <div className={`relative ${className}`}>
       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" />
@@ -16,8 +17,9 @@ export default function SearchBar({ value, onChange, placeholder = 'Search...', 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder}
         className="input-field pl-11"
       />
     </div>
   );
-}
+});

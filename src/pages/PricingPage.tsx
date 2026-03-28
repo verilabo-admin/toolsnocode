@@ -99,6 +99,7 @@ export function PricingPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [userTools, setUserTools] = useState<Tool[]>([]);
   const [selectedToolId, setSelectedToolId] = useState<string>('');
@@ -160,11 +161,14 @@ export function PricingPage() {
     if (!user || !selectedToolId) return;
 
     setLoading(true);
+    setCheckoutError(null);
     try {
       const { url } = await createCheckoutSession(product.priceId, product.mode, selectedToolId);
       if (url) window.location.href = url;
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to start checkout';
       console.error('Checkout error:', error);
+      setCheckoutError(message);
     } finally {
       setLoading(false);
     }
@@ -204,17 +208,22 @@ export function PricingPage() {
     }
 
     return (
-      <button
-        onClick={handleSubscribe}
-        disabled={loading || !selectedToolId}
-        className={`btn-primary ${className}`}
-      >
-        {loading ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-        ) : (
-          <><Rocket className="w-4 h-4" /> Boost My Tool — {formatPrice(product.price)}/yr</>
+      <>
+        <button
+          onClick={handleSubscribe}
+          disabled={loading || !selectedToolId}
+          className={`btn-primary ${className}`}
+        >
+          {loading ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+          ) : (
+            <><Rocket className="w-4 h-4" /> Boost My Tool — {formatPrice(product.price)}/yr</>
+          )}
+        </button>
+        {checkoutError && (
+          <p className="text-sm text-red-400 mt-2">{checkoutError}</p>
         )}
-      </button>
+      </>
     );
   };
 

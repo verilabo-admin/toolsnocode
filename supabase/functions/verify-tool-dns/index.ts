@@ -93,10 +93,18 @@ Deno.serve(async (req: Request) => {
         .replace(/\//g, "_")
         .replace(/=/g, "");
 
-      await supabaseAdmin
+      const { error: updateError } = await supabaseAdmin
         .from("tools")
         .update({ verification_token: token })
         .eq("id", tool_id);
+
+      if (updateError) {
+        console.error("Failed to save verification token:", updateError);
+        return new Response(JSON.stringify({ error: "Failed to save verification token" }), {
+          status: 500,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
 
       return new Response(
         JSON.stringify({ token, is_verified: false }),
@@ -137,6 +145,14 @@ Deno.serve(async (req: Request) => {
         });
       }
 
+      const domainRegex = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+      if (!domainRegex.test(domain)) {
+        return new Response(JSON.stringify({ error: "Invalid domain format" }), {
+          status: 400,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+
       let dnsSuccess = false;
       let dnsError = "";
 
@@ -164,11 +180,14 @@ Deno.serve(async (req: Request) => {
         dnsError = `DNS lookup failed: ${e instanceof Error ? e.message : String(e)}`;
       }
 
-      await supabaseAdmin.from("tool_verifications").insert({
+      const { error: logError } = await supabaseAdmin.from("tool_verifications").insert({
         tool_id,
         user_id: user.id,
         success: dnsSuccess,
       });
+      if (logError) {
+        console.error("Failed to log verification attempt:", logError);
+      }
 
       if (dnsSuccess) {
         await supabaseAdmin
@@ -193,8 +212,9 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (err) {
+    console.error("verify-tool-dns error:", err);
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Internal server error" }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }

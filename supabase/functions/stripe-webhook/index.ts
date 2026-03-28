@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       return new Response(`Webhook signature verification failed: ${message}`, { status: 400 });
     }
 
-    EdgeRuntime.waitUntil(handleEvent(event));
+    EdgeRuntime.waitUntil(handleEvent(event).catch(err => console.error('Webhook handler error:', err)));
 
     return Response.json({ received: true });
   } catch (error: unknown) {

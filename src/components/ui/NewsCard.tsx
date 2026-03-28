@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, Calendar, Tag } from 'lucide-react';
 import type { NewsArticle } from '../../types';
@@ -15,7 +16,7 @@ interface NewsCardProps {
   featured?: boolean;
 }
 
-export default function NewsCard({ article, featured = false }: NewsCardProps) {
+export default memo(function NewsCard({ article, featured = false }: NewsCardProps) {
   const colorClass = categoryColors[article.category] ?? 'bg-surface-700/50 text-surface-300 border-surface-600/30';
 
   const formattedDate = new Date(article.published_at).toLocaleDateString('en-US', {
@@ -126,4 +127,4 @@ export default function NewsCard({ article, featured = false }: NewsCardProps) {
       </div>
     </Link>
   );
-}
+});
