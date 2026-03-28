@@ -13,4 +13,4 @@ Disallow: /tutorials/new
 Disallow: /projects/new
 Disallow: /*/edit
 
-Sitemap: https://exlupbihqexeeyxwmveh.supabase.co/functions/v1/sitemap
+Sitemap: https://toolsnocode.com/sitemap.xml

@@ -45,7 +45,12 @@ Deno.serve(async (req) => {
       return new Response(`Webhook signature verification failed: ${message}`, { status: 400 });
     }
 
-    EdgeRuntime.waitUntil(handleEvent(event).catch(err => console.error('Webhook handler error:', err)));
+    EdgeRuntime.waitUntil(
+      Promise.all([
+        handleEvent(event).catch(err => console.error('Webhook handler error:', err)),
+        deactivateExpiredBoosts().catch(err => console.error('Expired boost cleanup error:', err)),
+      ])
+    );
 
     return Response.json({ received: true });
   } catch (error: unknown) {
@@ -56,73 +61,104 @@ Deno.serve(async (req) => {
 });
 
 async function handleEvent(event: Stripe.Event) {
-  const stripeData = event?.data?.object ?? {};
+  console.info(`Processing webhook event: ${event.type}`);
 
-  if (!stripeData) {
-    return;
-  }
+  switch (event.type) {
+    // Checkout completed — handles both subscription and one-time payments
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const customerId = session.customer as string | null;
 
-  if (!('customer' in stripeData)) {
-    return;
-  }
-
-  // for one time payments, we only listen for the checkout.session.completed event
-  if (event.type === 'payment_intent.succeeded' && event.data.object.invoice === null) {
-    return;
-  }
-
-  const { customer: customerId } = stripeData;
-
-  if (!customerId || typeof customerId !== 'string') {
-    console.error(`No customer received on event: ${JSON.stringify(event)}`);
-  } else {
-    let isSubscription = true;
-
-    if (event.type === 'checkout.session.completed') {
-      const { mode } = stripeData as Stripe.Checkout.Session;
-
-      isSubscription = mode === 'subscription';
-
-      console.info(`Processing ${isSubscription ? 'subscription' : 'one-time payment'} checkout session`);
-    }
-
-    const { mode, payment_status } = stripeData as Stripe.Checkout.Session;
-
-    if (isSubscription) {
-      console.info(`Starting subscription sync for customer: ${customerId}`);
-      await syncCustomerFromStripe(customerId);
-    } else if (mode === 'payment' && payment_status === 'paid') {
-      try {
-        // Extract the necessary information from the session
-        const {
-          id: checkout_session_id,
-          payment_intent,
-          amount_subtotal,
-          amount_total,
-          currency,
-        } = stripeData as Stripe.Checkout.Session;
-
-        // Insert the order into the stripe_orders table
-        const { error: orderError } = await supabase.from('stripe_orders').insert({
-          checkout_session_id,
-          payment_intent_id: payment_intent,
-          customer_id: customerId,
-          amount_subtotal,
-          amount_total,
-          currency,
-          payment_status,
-          status: 'completed', // assuming we want to mark it as completed since payment is successful
-        });
-
-        if (orderError) {
-          console.error('Error inserting order:', orderError);
-          return;
-        }
-        console.info(`Successfully processed one-time payment for session: ${checkout_session_id}`);
-      } catch (error) {
-        console.error('Error processing one-time payment:', error);
+      if (!customerId) {
+        console.error('No customer on checkout.session.completed');
+        return;
       }
+
+      if (session.mode === 'subscription') {
+        console.info(`Subscription checkout completed for customer: ${customerId}`);
+        await syncCustomerFromStripe(customerId);
+      } else if (session.mode === 'payment' && session.payment_status === 'paid') {
+        try {
+          const { error: orderError } = await supabase.from('stripe_orders').insert({
+            checkout_session_id: session.id,
+            payment_intent_id: session.payment_intent,
+            customer_id: customerId,
+            amount_subtotal: session.amount_subtotal,
+            amount_total: session.amount_total,
+            currency: session.currency,
+            payment_status: session.payment_status,
+            status: 'completed',
+          });
+
+          if (orderError) {
+            console.error('Error inserting order:', orderError);
+            return;
+          }
+          console.info(`One-time payment processed for session: ${session.id}`);
+        } catch (error) {
+          console.error('Error processing one-time payment:', error);
+        }
+      }
+      break;
     }
+
+    // Subscription renewed, upgraded, downgraded, or payment method changed
+    case 'customer.subscription.updated': {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+
+      if (!customerId) {
+        console.error('No customer on subscription.updated');
+        return;
+      }
+
+      console.info(`Subscription updated for customer: ${customerId}, status: ${subscription.status}`);
+      await syncCustomerFromStripe(customerId);
+      break;
+    }
+
+    // Subscription fully canceled (after period end or immediately)
+    case 'customer.subscription.deleted': {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+
+      if (!customerId) {
+        console.error('No customer on subscription.deleted');
+        return;
+      }
+
+      console.info(`Subscription deleted for customer: ${customerId}`);
+      await syncCustomerFromStripe(customerId);
+      break;
+    }
+
+    // Payment failed on invoice (renewal failure)
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerId = invoice.customer as string | null;
+
+      if (!customerId) {
+        console.error('No customer on invoice.payment_failed');
+        return;
+      }
+
+      console.info(`Invoice payment failed for customer: ${customerId}`);
+      await syncCustomerFromStripe(customerId);
+      break;
+    }
+
+    // One-time payment succeeded (skip if it has an invoice — that's subscription-related)
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      if (paymentIntent.invoice !== null) {
+        return; // subscription invoice, already handled via checkout/subscription events
+      }
+      // One-time payments are handled via checkout.session.completed
+      break;
+    }
+
+    default:
+      console.info(`Unhandled event type: ${event.type}`);
   }
 }
 
@@ -140,7 +176,7 @@ async function syncCustomerFromStripe(customerId: string) {
       const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
         {
           customer_id: customerId,
-          subscription_status: 'not_started',
+          status: 'not_started',
         },
         {
           onConflict: 'customer_id',
@@ -261,5 +297,32 @@ async function deactivateBoostForCustomer(customerId: string) {
     }
   } catch (error) {
     console.error('Error in deactivateBoostForCustomer:', error);
+  }
+}
+
+/**
+ * Deactivate all expired boosts across the platform.
+ * Called on every webhook to catch any tools whose boost_expires_at has passed
+ * without a corresponding webhook event (e.g., network failures).
+ */
+async function deactivateExpiredBoosts() {
+  try {
+    const { error, count } = await supabase
+      .from('tools')
+      .update({
+        is_boosted: false,
+        boost_expires_at: null,
+        boost_plan: '',
+      })
+      .eq('is_boosted', true)
+      .lt('boost_expires_at', new Date().toISOString());
+
+    if (error) {
+      console.error('Error deactivating expired boosts:', error);
+    } else if (count && count > 0) {
+      console.info(`Deactivated ${count} expired boosts`);
+    }
+  } catch (error) {
+    console.error('Error in deactivateExpiredBoosts:', error);
   }
 }

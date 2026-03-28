@@ -55,16 +55,26 @@ export default function ExpertDetailPage() {
 
   const jsonLd = useMemo(() => {
     if (!expert) return undefined;
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'Person',
-      name: expert.name,
-      description: expert.bio?.slice(0, 200),
-      image: expert.avatar_url,
-      url: expert.portfolio_url || `https://toolsnocode.com/experts/${expert.slug}`,
-      knowsAbout: tools.map((t) => t.name),
-      ...(expert.country ? { addressCountry: expert.country } : {}),
-    };
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Experts', item: 'https://toolsnocode.com/experts' },
+          { '@type': 'ListItem', position: 2, name: expert.name },
+        ],
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: expert.name,
+        description: expert.bio?.slice(0, 200),
+        image: expert.avatar_url,
+        url: expert.portfolio_url || `https://toolsnocode.com/experts/${expert.slug}`,
+        knowsAbout: tools.map((t) => t.name),
+        ...(expert.country ? { addressCountry: expert.country } : {}),
+      },
+    ];
   }, [expert, tools]);
 
   useSEO({
