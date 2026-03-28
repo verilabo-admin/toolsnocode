@@ -34,7 +34,3 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
 export const getProductById = (id: string): StripeProduct | undefined => {
   return STRIPE_PRODUCTS.find(product => product.id === id);
 };
-
-export const getProductByPriceId = (priceId: string): StripeProduct | undefined => {
-  return STRIPE_PRODUCTS.find(product => product.priceId === priceId);
-};

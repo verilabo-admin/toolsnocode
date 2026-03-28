@@ -28,16 +28,3 @@ export async function createCheckoutSession(priceId: string, mode: 'subscription
 
   return data;
 }
-
-export async function getUserSubscription() {
-  const { data, error } = await supabase
-    .from('stripe_user_subscriptions')
-    .select('*')
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}

@@ -224,7 +224,7 @@ async function syncCustomerFromStripe(customerId: string) {
 
     if (subscription.status === 'active' && toolId) {
       await activateBoost(customerId, toolId, subscription.current_period_end);
-    } else if (['canceled', 'unpaid', 'incomplete_expired'].includes(subscription.status)) {
+    } else if (['canceled', 'unpaid', 'incomplete_expired', 'past_due'].includes(subscription.status)) {
       await deactivateBoostForCustomer(customerId);
     }
 

@@ -104,6 +104,7 @@ export function PricingPage() {
   const [userTools, setUserTools] = useState<Tool[]>([]);
   const [selectedToolId, setSelectedToolId] = useState<string>('');
   const [toolsLoading, setToolsLoading] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const product = STRIPE_PRODUCTS[0];
 
   const faqJsonLd = useMemo(() => ({
@@ -129,29 +130,38 @@ export function PricingPage() {
   useEffect(() => {
     if (!user) return;
 
-    const fetchUserTools = async () => {
+    const fetchUserData = async () => {
       setToolsLoading(true);
-      const { data } = await supabase
-        .from('tools')
-        .select('id, name, slug, logo_url, is_boosted')
-        .eq('user_id', user.id)
-        .order('name');
 
-      if (data) {
-        setUserTools(data as Tool[]);
+      const [toolsResult, subResult] = await Promise.all([
+        supabase
+          .from('tools')
+          .select('id, name, slug, logo_url, is_boosted')
+          .eq('user_id', user.id)
+          .order('name'),
+        supabase
+          .from('stripe_user_subscriptions')
+          .select('subscription_status')
+          .maybeSingle(),
+      ]);
+
+      if (toolsResult.data) {
+        setUserTools(toolsResult.data as Tool[]);
         const preselected = searchParams.get('tool');
         if (preselected) {
-          const match = data.find((t: { id: string }) => t.id === preselected);
+          const match = toolsResult.data.find((t: { id: string }) => t.id === preselected);
           if (match) setSelectedToolId(match.id);
         } else {
-          const unboosted = data.find((t: { is_boosted?: boolean }) => !t.is_boosted);
+          const unboosted = toolsResult.data.find((t: { is_boosted?: boolean }) => !t.is_boosted);
           if (unboosted) setSelectedToolId(unboosted.id);
         }
       }
+
+      setHasActiveSubscription(subResult.data?.subscription_status === 'active');
       setToolsLoading(false);
     };
 
-    fetchUserTools();
+    fetchUserData();
   }, [user, searchParams]);
 
   const selectedTool = userTools.find((t) => t.id === selectedToolId);
@@ -193,6 +203,16 @@ export function PricingPage() {
         <Link to="/tools/new" className={`btn-primary ${className}`}>
           <Wrench className="w-4 h-4" />
           Submit Your Tool First
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      );
+    }
+
+    if (hasActiveSubscription) {
+      return (
+        <Link to="/account" className={`btn-primary ${className}`}>
+          <Check className="w-4 h-4" />
+          Manage Subscription
           <ArrowRight className="w-4 h-4" />
         </Link>
       );

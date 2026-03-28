@@ -196,6 +196,23 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Prevent duplicate subscriptions
+    if (mode === 'subscription') {
+      const { data: existingSub } = await supabase
+        .from('stripe_subscriptions')
+        .select('status')
+        .eq('customer_id', customerId)
+        .maybeSingle();
+
+      if (existingSub?.status === 'active') {
+        return corsResponse(
+          { error: 'You already have an active subscription. Manage it from your account page.' },
+          400,
+          reqOrigin,
+        );
+      }
+    }
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       payment_method_types: ['card'],
