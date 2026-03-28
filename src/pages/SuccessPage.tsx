@@ -1,9 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, ArrowRight, Rocket, Play, TrendingUp } from 'lucide-react';
+import { CheckCircle, ArrowRight, Rocket, Play, TrendingUp, Loader2 } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 export function SuccessPage() {
+  const { user } = useAuth();
+  const [boostConfirmed, setBoostConfirmed] = useState(false);
+  const [checking, setChecking] = useState(true);
+
   useSEO({
     title: 'Boost Activated',
     description: 'Your tool boost is now active on ToolsNoCode.',
@@ -14,6 +20,38 @@ export function SuccessPage() {
   useEffect(() => {
     localStorage.removeItem('checkout_session_id');
   }, []);
+
+  useEffect(() => {
+    if (!user) { setChecking(false); return; }
+
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    const checkBoost = async () => {
+      const { data } = await supabase
+        .from('tools')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_boosted', true)
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setBoostConfirmed(true);
+        setChecking(false);
+        return;
+      }
+
+      attempts++;
+      if (attempts >= maxAttempts) {
+        setChecking(false);
+        return;
+      }
+
+      setTimeout(checkBoost, 2000);
+    };
+
+    checkBoost();
+  }, [user]);
 
   const nextSteps = [
     {
@@ -41,10 +79,19 @@ export function SuccessPage() {
         </div>
 
         <h1 className="text-3xl font-bold text-white mb-3">
-          Boost Activated!
+          {checking ? 'Activating Boost...' : boostConfirmed ? 'Boost Activated!' : 'Payment Received!'}
         </h1>
         <p className="text-surface-400 mb-8">
-          Your tool is now boosted and will receive premium visibility across ToolsNoCode.
+          {checking ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Confirming your boost activation...
+            </span>
+          ) : boostConfirmed ? (
+            'Your tool is now boosted and will receive premium visibility across ToolsNoCode.'
+          ) : (
+            'Your payment was successful. Your boost will activate shortly — it may take a few seconds.'
+          )}
         </p>
 
         <div className="glass-card p-6 mb-8 text-left">
