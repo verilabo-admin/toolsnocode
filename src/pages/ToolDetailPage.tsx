@@ -89,27 +89,37 @@ export default function ToolDetailPage() {
 
   const jsonLd = useMemo(() => {
     if (!tool) return undefined;
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
-      name: tool.name,
-      description: tool.description || tool.tagline,
-      url: tool.website || `https://toolsnocode.com/tools/${tool.slug}`,
-      applicationCategory: tool.category?.name || 'WebApplication',
-      offers: {
-        '@type': 'Offer',
-        price: tool.pricing === 'free' ? '0' : undefined,
-        priceCurrency: 'USD',
-        availability: 'https://schema.org/OnlineOnly',
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Tools', item: 'https://toolsnocode.com/tools' },
+          { '@type': 'ListItem', position: 2, name: tool.name },
+        ],
       },
-      aggregateRating: tool.rating > 0 ? {
-        '@type': 'AggregateRating',
-        ratingValue: tool.rating,
-        reviewCount: tool.review_count,
-        bestRating: 5,
-        worstRating: 1,
+      {
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: tool.name,
+        description: tool.description || tool.tagline,
+        url: tool.website || `https://toolsnocode.com/tools/${tool.slug}`,
+        applicationCategory: tool.category?.name || 'WebApplication',
+        offers: {
+          '@type': 'Offer',
+          price: tool.pricing === 'free' ? '0' : undefined,
+          priceCurrency: 'USD',
+          availability: 'https://schema.org/OnlineOnly',
+        },
+        aggregateRating: tool.rating > 0 ? {
+          '@type': 'AggregateRating',
+          ratingValue: tool.rating,
+          reviewCount: tool.review_count,
+          bestRating: 5,
+          worstRating: 1,
       } : undefined,
-    };
+      },
+    ];
   }, [tool]);
 
   useSEO({

@@ -47,19 +47,29 @@ export default function ProjectDetailPage() {
 
   const jsonLd = useMemo(() => {
     if (!project) return undefined;
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'CreativeWork',
-      name: project.title,
-      description: project.description?.slice(0, 200),
-      image: project.screenshot_url,
-      url: project.live_url || `https://toolsnocode.com/projects/${project.slug}`,
-      author: {
-        '@type': 'Person',
-        name: project.author_name,
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Projects', item: 'https://toolsnocode.com/projects' },
+          { '@type': 'ListItem', position: 2, name: project.title },
+        ],
       },
-      datePublished: project.created_at,
-    };
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CreativeWork',
+        name: project.title,
+        description: project.description?.slice(0, 200),
+        image: project.screenshot_url,
+        url: project.live_url || `https://toolsnocode.com/projects/${project.slug}`,
+        author: {
+          '@type': 'Person',
+          name: project.author_name,
+        },
+        datePublished: project.created_at,
+      },
+    ];
   }, [project]);
 
   useSEO({

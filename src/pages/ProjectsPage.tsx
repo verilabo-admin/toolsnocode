@@ -24,6 +24,13 @@ export default function ProjectsPage() {
     title: 'No-Code Projects Showcase',
     description: 'Explore real projects built with no-code and AI tools. Get inspired, discover tech stacks, and showcase your own creations.',
     url: '/projects',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'No-Code Projects Showcase',
+      url: 'https://toolsnocode.com/projects',
+      description: 'Explore real projects built with no-code and AI tools. Get inspired, discover tech stacks, and showcase your own creations.',
+    },
   });
 
   const search = searchParams.get('q') || '';

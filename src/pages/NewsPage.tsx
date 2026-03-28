@@ -13,6 +13,13 @@ export default function NewsPage() {
     title: 'AI & No-Code News',
     description: 'Stay up to date with the latest AI model releases, no-code tool updates, industry moves and research from the world of artificial intelligence.',
     url: '/news',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'AI & No-Code News',
+      url: 'https://toolsnocode.com/news',
+      description: 'Stay up to date with the latest AI model releases, no-code tool updates, industry moves and research from the world of artificial intelligence.',
+    },
   });
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);

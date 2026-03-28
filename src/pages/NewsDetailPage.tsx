@@ -105,34 +105,44 @@ export default function NewsDetailPage() {
 
   const jsonLd = useMemo(() => {
     if (!article) return undefined;
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'NewsArticle',
-      headline: article.title,
-      description: article.summary,
-      image: article.image_url ? [article.image_url] : [],
-      datePublished: article.published_at,
-      dateModified: article.created_at,
-      author: {
-        '@type': 'Organization',
-        name: article.source,
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'News', item: 'https://toolsnocode.com/news' },
+          { '@type': 'ListItem', position: 2, name: article.title },
+        ],
       },
-      publisher: {
-        '@type': 'Organization',
-        name: 'ToolsNoCode',
-        logo: {
-          '@type': 'ImageObject',
-          url: `${SITE_URL}/favicon.svg`,
+      {
+        '@context': 'https://schema.org',
+        '@type': 'NewsArticle',
+        headline: article.title,
+        description: article.summary,
+        image: article.image_url ? [article.image_url] : [],
+        datePublished: article.published_at,
+        dateModified: article.created_at,
+        author: {
+          '@type': 'Organization',
+          name: article.source,
         },
+        publisher: {
+          '@type': 'Organization',
+          name: 'ToolsNoCode',
+          logo: {
+            '@type': 'ImageObject',
+            url: `${SITE_URL}/favicon.svg`,
+          },
+        },
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': articleUrl,
+        },
+        keywords: article.tags.join(', '),
+        articleSection: article.category,
+        url: articleUrl,
       },
-      mainEntityOfPage: {
-        '@type': 'WebPage',
-        '@id': articleUrl,
-      },
-      keywords: article.tags.join(', '),
-      articleSection: article.category,
-      url: articleUrl,
-    };
+    ];
   }, [article, articleUrl]);
 
   useSEO({

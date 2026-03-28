@@ -24,6 +24,13 @@ export default function ExpertsPage() {
     title: 'No-Code & AI Experts',
     description: 'Find and connect with top no-code and AI experts. Browse expert profiles, tools they use, and hire them for your next project.',
     url: '/experts',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'No-Code & AI Experts',
+      url: 'https://toolsnocode.com/experts',
+      description: 'Find and connect with top no-code and AI experts. Browse expert profiles, tools they use, and hire them for your next project.',
+    },
   });
 
   const search = searchParams.get('q') || '';

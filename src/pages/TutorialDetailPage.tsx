@@ -136,19 +136,29 @@ export default function TutorialDetailPage() {
 
   const jsonLd = useMemo(() => {
     if (!tutorial) return undefined;
-    return {
-      '@context': 'https://schema.org',
-      '@type': tutorial.content_type === 'video' ? 'VideoObject' : 'Article',
-      name: tutorial.title,
-      description: tutorial.description?.slice(0, 200),
-      ...(tutorial.thumbnail_url ? { thumbnailUrl: tutorial.thumbnail_url } : {}),
-      author: {
-        '@type': 'Person',
-        name: tutorial.author_name || 'ToolsNoCode',
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Tutorials', item: 'https://toolsnocode.com/tutorials' },
+          { '@type': 'ListItem', position: 2, name: tutorial.title },
+        ],
       },
-      datePublished: tutorial.created_at,
-      ...(tutorial.video_url ? { contentUrl: tutorial.video_url } : {}),
-    };
+      {
+        '@context': 'https://schema.org',
+        '@type': tutorial.content_type === 'video' ? 'VideoObject' : 'Article',
+        name: tutorial.title,
+        description: tutorial.description?.slice(0, 200),
+        ...(tutorial.thumbnail_url ? { thumbnailUrl: tutorial.thumbnail_url } : {}),
+        author: {
+          '@type': 'Person',
+          name: tutorial.author_name || 'ToolsNoCode',
+        },
+        datePublished: tutorial.created_at,
+        ...(tutorial.video_url ? { contentUrl: tutorial.video_url } : {}),
+      },
+    ];
   }, [tutorial]);
 
   useSEO({

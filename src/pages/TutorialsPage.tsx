@@ -26,6 +26,13 @@ export default function TutorialsPage() {
     title: 'No-Code & AI Tutorials',
     description: 'Learn no-code and AI with step-by-step tutorials, video guides, and courses. Filter by tool, format, and difficulty level.',
     url: '/tutorials',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'No-Code & AI Tutorials',
+      url: 'https://toolsnocode.com/tutorials',
+      description: 'Learn no-code and AI with step-by-step tutorials, video guides, and courses. Filter by tool, format, and difficulty level.',
+    },
   });
 
   const search = searchParams.get('q') || '';

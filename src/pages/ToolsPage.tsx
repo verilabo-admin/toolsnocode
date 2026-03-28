@@ -34,6 +34,13 @@ export default function ToolsPage() {
     title: 'AI & No-Code Tools',
     description: 'Browse and compare the best AI and no-code tools. Filter by category, pricing, and difficulty level to find your perfect stack.',
     url: '/tools',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'AI & No-Code Tools',
+      url: 'https://toolsnocode.com/tools',
+      description: 'Browse and compare the best AI and no-code tools. Filter by category, pricing, and difficulty level to find your perfect stack.',
+    },
   });
 
   const search = searchParams.get('q') || '';
