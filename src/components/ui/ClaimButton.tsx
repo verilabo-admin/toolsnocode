@@ -83,8 +83,11 @@ export default function ClaimButton({ itemType, itemId, itemName, itemWebsite, o
 
   const getAuthHeaders = async () => {
     const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) {
+      throw new Error('Not authenticated. Please sign in and try again.');
+    }
     return {
-      Authorization: `Bearer ${data.session?.access_token}`,
+      Authorization: `Bearer ${data.session.access_token}`,
       'Content-Type': 'application/json',
     };
   };
