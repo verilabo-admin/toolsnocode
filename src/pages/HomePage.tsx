@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Users, BookOpen, Rocket, Search, TrendingUp, Zap, Clock, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Tool, Category } from '../types';
 import ToolCard from '../components/ui/ToolCard';
 import CategoryCard from '../components/ui/CategoryCard';
-import { useSEO } from '../hooks/useSEO';
+import { useSEO, BASE_URL } from '../hooks/useSEO';
 
 export default function HomePage() {
   const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
@@ -15,9 +15,25 @@ export default function HomePage() {
   const [stats, setStats] = useState({ tools: 0, experts: 0, tutorials: 0, projects: 0 });
   const [searchQuery, setSearchQuery] = useState('');
 
+  const featuredJsonLd = useMemo(() => {
+    if (featuredTools.length === 0) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Featured AI & No-Code Tools',
+      itemListElement: featuredTools.map((t, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${BASE_URL}/tools/${t.slug}`,
+        name: t.name,
+      })),
+    };
+  }, [featuredTools]);
+
   useSEO({
     url: '/',
     type: 'website',
+    jsonLd: featuredJsonLd,
   });
 
   useEffect(() => {
@@ -118,6 +134,35 @@ export default function HomePage() {
         </div>
       </section>
 
+      {featuredTools.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <div className="relative overflow-hidden rounded-2xl border border-brand-500/20 bg-gradient-to-b from-brand-500/[0.06] via-transparent to-transparent p-6 sm:p-8">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-500/[0.08] via-transparent to-transparent pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-brand-500/15 border border-brand-500/25 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-brand-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-white">Featured Tools</h2>
+                    <p className="text-sm text-surface-400 mt-0.5">Editor's picks & boosted tools</p>
+                  </div>
+                </div>
+                <Link to="/tools?sort=featured" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
+                  View all <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {featuredTools.map((tool) => (
+                  <ToolCard key={tool.id} tool={tool} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {categories.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="flex items-center justify-between mb-8">
@@ -170,30 +215,6 @@ export default function HomePage() {
           </div>
         </Link>
       </section>
-
-      {featuredTools.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-brand-400" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">Featured Tools</h2>
-                <p className="text-sm text-surface-500 mt-0.5">Top tools & boosted picks</p>
-              </div>
-            </div>
-            <Link to="/tools?sort=featured" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredTools.map((tool) => (
-              <ToolCard key={tool.id} tool={tool} />
-            ))}
-          </div>
-        </section>
-      )}
 
       {newestTools.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
