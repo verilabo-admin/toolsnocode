@@ -30,6 +30,11 @@ export default function ToolDetailPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const demoVideo = useMemo(
+    () => (tool?.is_boosted && tool.video_url ? parseVideoUrl(tool.video_url) : null),
+    [tool?.is_boosted, tool?.video_url],
+  );
+
   useEffect(() => {
     async function load() {
       if (!slug) return;
@@ -271,24 +276,21 @@ export default function ToolDetailPage() {
         </div>
       </div>
 
-      {tool.is_boosted && tool.video_url && (() => {
-        const videoInfo = parseVideoUrl(tool.video_url);
-        if (!videoInfo) return null;
-        return (
-          <div className="mb-6">
-            <div className="relative w-full rounded-xl border border-surface-800/50 overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
-              <iframe
-                src={videoInfo.embedUrl}
-                title={`${tool.name} demo video`}
-                className="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                loading="lazy"
-              />
-            </div>
+      {demoVideo && (
+        <div className="mb-6">
+          <div className="relative w-full rounded-xl border border-surface-800/50 overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+            <iframe
+              src={demoVideo.embedUrl}
+              title={`${tool.name} demo video`}
+              className="absolute inset-0 w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {tool.screenshot_urls && tool.screenshot_urls.length > 0 && (
         <div className="mb-6">

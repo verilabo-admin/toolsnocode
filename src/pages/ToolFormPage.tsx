@@ -116,7 +116,7 @@ export default function ToolFormPage() {
       return;
     }
 
-    const payload: Record<string, unknown> = {
+    const payload = {
       name: form.name,
       slug: newSlug,
       tagline: form.tagline,
@@ -130,10 +130,8 @@ export default function ToolFormPage() {
       tags: tagsArr,
       difficulty_level: form.difficulty_level,
       user_id: user.id,
+      ...(isEdit && isBoosted ? { video_url: trimmedVideo } : {}),
     };
-    if (isEdit && isBoosted) {
-      payload.video_url = trimmedVideo;
-    }
 
     if (isEdit) {
       const { error: err } = await supabase
