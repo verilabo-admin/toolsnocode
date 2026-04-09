@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import {
   User, Wrench, Users, BookOpen, FolderOpen, ShieldCheck,
   Mail, Key, Loader2, CheckCircle2, AlertCircle, Clock,
-  XCircle, ExternalLink, Pencil, ArrowRight, Plus, Rocket
+  XCircle, ExternalLink, Pencil, ArrowRight, Plus, Rocket, Play
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -173,15 +173,25 @@ export default function AccountPage() {
                   </Link>
                 )}
                 {t.is_boosted && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-500/10 border border-brand-500/25 text-xs">
-                    <Rocket className="w-3.5 h-3.5 text-brand-400" />
-                    <span className="text-brand-400 font-medium">Boosted</span>
-                    {t.boost_expires_at && (
-                      <span className="text-surface-500 ml-auto">
-                        until {new Date(t.boost_expires_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-500/10 border border-brand-500/25 text-xs">
+                      <Rocket className="w-3.5 h-3.5 text-brand-400" />
+                      <span className="text-brand-400 font-medium">Boosted</span>
+                      {t.boost_expires_at && (
+                        <span className="text-surface-500 ml-auto">
+                          until {new Date(t.boost_expires_at).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    <Link
+                      to={`/tools/${t.slug}/edit`}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-900/60 border border-surface-700/50 hover:border-brand-500/30 transition-all text-xs group"
+                    >
+                      <Play className="w-3.5 h-3.5 text-brand-400" />
+                      <span className="text-surface-300 font-medium">{t.video_url ? 'Edit demo video' : 'Add demo video'}</span>
+                      <ArrowRight className="w-3 h-3 text-brand-400 ml-auto group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  </>
                 )}
               </div>
             );

@@ -13,6 +13,7 @@ import UpvoteButton from '../components/ui/UpvoteButton';
 import VerifyToolButton from '../components/ui/VerifyToolButton';
 import type { Tool, Tutorial, Expert, Project } from '../types';
 import { useSEO } from '../hooks/useSEO';
+import { parseVideoUrl } from '../lib/video';
 
 export default function ToolDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -269,6 +270,25 @@ export default function ToolDetailPage() {
           </div>
         </div>
       </div>
+
+      {tool.is_boosted && tool.video_url && (() => {
+        const videoInfo = parseVideoUrl(tool.video_url);
+        if (!videoInfo) return null;
+        return (
+          <div className="mb-6">
+            <div className="relative w-full rounded-xl border border-surface-800/50 overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+              <iframe
+                src={videoInfo.embedUrl}
+                title={`${tool.name} demo video`}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          </div>
+        );
+      })()}
 
       {tool.screenshot_urls && tool.screenshot_urls.length > 0 && (
         <div className="mb-6">
