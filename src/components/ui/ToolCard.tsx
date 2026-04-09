@@ -32,7 +32,7 @@ export default memo(function ToolCard({ tool }: ToolCardProps) {
         <div className="flex items-center gap-1.5 mb-3 -mt-0.5">
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
             <Sparkles className="w-3 h-3 text-amber-400" />
-            <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">Featured</span>
+            <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">Editor's Pick</span>
           </div>
         </div>
       ) : null}

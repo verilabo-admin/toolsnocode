@@ -15,7 +15,8 @@ const sortOptions = [
   { value: 'rating', label: 'Highest Rated' },
   { value: 'trending', label: 'Trending' },
   { value: 'upvotes', label: 'Most Upvoted' },
-  { value: 'featured', label: 'Featured' },
+  { value: 'boosted', label: 'Boosted' },
+  { value: 'featured', label: "Editor's Picks" },
 ] as const;
 
 export default function ToolsPage() {
@@ -74,8 +75,10 @@ export default function ToolsPage() {
 
     if (sortBy === 'trending') {
       query = query.eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false });
+    } else if (sortBy === 'boosted') {
+      query = query.eq('is_boosted', true).order('boost_expires_at', { ascending: false });
     } else if (sortBy === 'featured') {
-      query = query.or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false });
+      query = query.eq('is_featured', true).eq('is_boosted', false).order('created_at', { ascending: false });
     } else if (sortBy === 'rating') {
       query = query.order('is_boosted', { ascending: false }).order('rating', { ascending: false });
     } else if (sortBy === 'upvotes') {

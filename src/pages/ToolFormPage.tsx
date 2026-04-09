@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Save, Loader2, ArrowLeft, Trash2, Plus, X, Rocket, TrendingUp, Star, ArrowRight, CheckCircle } from 'lucide-react';
+import { Save, Loader2, ArrowLeft, Trash2, Plus, X, Rocket, TrendingUp, Star, ArrowRight, CheckCircle, Play } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSEO } from '../hooks/useSEO';
 import ImageUploader from '../components/ui/ImageUploader';
+import { parseVideoUrl } from '../lib/video';
 import type { Category } from '../types';
 
 export default function ToolFormPage() {
@@ -28,6 +29,7 @@ export default function ToolFormPage() {
   const [error, setError] = useState('');
   const [toolId, setToolId] = useState('');
   const [screenshotUrls, setScreenshotUrls] = useState<string[]>(['']);
+  const [isBoosted, setIsBoosted] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -40,6 +42,7 @@ export default function ToolFormPage() {
     pricing_details: '',
     tags: '',
     difficulty_level: 'beginner' as string,
+    video_url: '',
   });
 
   useEffect(() => {
@@ -66,6 +69,7 @@ export default function ToolFormPage() {
           return;
         }
         setToolId(data.id);
+        setIsBoosted(Boolean(data.is_boosted));
         setForm({
           name: data.name,
           tagline: data.tagline ?? '',
@@ -77,6 +81,7 @@ export default function ToolFormPage() {
           pricing_details: data.pricing_details ?? '',
           tags: (data.tags ?? []).join(', '),
           difficulty_level: data.difficulty_level ?? 'beginner',
+          video_url: data.video_url ?? '',
         });
         const urls: string[] = (data.screenshot_urls ?? []);
         setScreenshotUrls(urls.length > 0 ? urls : ['']);
@@ -104,6 +109,13 @@ export default function ToolFormPage() {
     const newSlug = generateSlug(form.name);
     const screenshots = screenshotUrls.map((u) => u.trim()).filter(Boolean);
 
+    const trimmedVideo = form.video_url.trim();
+    if (isEdit && isBoosted && trimmedVideo && !parseVideoUrl(trimmedVideo)) {
+      setError('Demo video URL must be a valid YouTube, Vimeo, or Loom link.');
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       name: form.name,
       slug: newSlug,
@@ -118,6 +130,7 @@ export default function ToolFormPage() {
       tags: tagsArr,
       difficulty_level: form.difficulty_level,
       user_id: user.id,
+      ...(isEdit && isBoosted ? { video_url: trimmedVideo } : {}),
     };
 
     if (isEdit) {
@@ -338,6 +351,24 @@ export default function ToolFormPage() {
             <label className="block text-sm font-medium text-surface-300 mb-1.5">Tags (comma separated)</label>
             <input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="input-field" placeholder="ai, chatbot, productivity" />
           </div>
+
+          {isEdit && isBoosted && (
+            <div className="p-4 rounded-xl bg-brand-500/[0.06] border border-brand-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Play className="w-4 h-4 text-brand-400" />
+                <label className="block text-sm font-semibold text-white">Demo video URL</label>
+                <span className="text-[10px] font-semibold text-brand-400 uppercase tracking-wide px-1.5 py-0.5 rounded bg-brand-500/10 border border-brand-500/20">Boost perk</span>
+              </div>
+              <input
+                type="url"
+                value={form.video_url}
+                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                className="input-field"
+                placeholder="https://youtube.com/watch?v=..."
+              />
+              <p className="text-xs text-surface-500 mt-1.5">YouTube, Vimeo, or Loom. Shown at the top of your tool page.</p>
+            </div>
+          )}
 
           {!isEdit && (
             <div className="p-4 rounded-xl bg-brand-500/8 border border-brand-500/20 flex items-start gap-3">

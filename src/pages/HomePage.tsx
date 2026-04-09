@@ -8,40 +8,43 @@ import CategoryCard from '../components/ui/CategoryCard';
 import { useSEO, BASE_URL } from '../hooks/useSEO';
 
 export default function HomePage() {
-  const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
+  const [boostedTools, setBoostedTools] = useState<Tool[]>([]);
+  const [editorsPicks, setEditorsPicks] = useState<Tool[]>([]);
   const [newestTools, setNewestTools] = useState<Tool[]>([]);
   const [trendingTools, setTrendingTools] = useState<Tool[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState({ tools: 0, experts: 0, tutorials: 0, projects: 0 });
   const [searchQuery, setSearchQuery] = useState('');
 
-  const featuredJsonLd = useMemo(() => {
-    if (featuredTools.length === 0) return undefined;
+  const highlightedJsonLd = useMemo(() => {
+    const highlighted = [...boostedTools, ...editorsPicks];
+    if (highlighted.length === 0) return undefined;
     return {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
-      name: 'Featured AI & No-Code Tools',
-      itemListElement: featuredTools.map((t, i) => ({
+      name: 'Highlighted AI & No-Code Tools',
+      itemListElement: highlighted.map((t, i) => ({
         '@type': 'ListItem',
         position: i + 1,
         url: `${BASE_URL}/tools/${t.slug}`,
         name: t.name,
       })),
     };
-  }, [featuredTools]);
+  }, [boostedTools, editorsPicks]);
 
   useSEO({
     url: '/',
     type: 'website',
-    jsonLd: featuredJsonLd,
+    jsonLd: highlightedJsonLd,
   });
 
   useEffect(() => {
     async function load() {
       try {
-        const [featuredRes, newestRes, trendingRes, catRes, toolCount, expertCount, tutorialCount, projectCount] =
+        const [boostedRes, pickRes, newestRes, trendingRes, catRes, toolCount, expertCount, tutorialCount, projectCount] =
           await Promise.all([
-            supabase.from('tools').select('*').or('is_featured.eq.true,is_boosted.eq.true').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
+            supabase.from('tools').select('*').eq('is_boosted', true).order('boost_expires_at', { ascending: false }).limit(6),
+            supabase.from('tools').select('*').eq('is_featured', true).eq('is_boosted', false).order('created_at', { ascending: false }).limit(6),
             supabase.from('tools').select('*').order('is_boosted', { ascending: false }).order('created_at', { ascending: false }).limit(6),
             supabase.from('tools').select('*').eq('is_trending', true).order('is_boosted', { ascending: false }).order('upvotes', { ascending: false }).limit(6),
             supabase.from('categories').select('*').is('parent_id', null).order('sort_order'),
@@ -51,7 +54,8 @@ export default function HomePage() {
             supabase.from('projects').select('id', { count: 'exact', head: true }),
           ]);
 
-        if (featuredRes.data) setFeaturedTools(featuredRes.data);
+        if (boostedRes.data) setBoostedTools(boostedRes.data);
+        if (pickRes.data) setEditorsPicks(pickRes.data);
         if (newestRes.data) setNewestTools(newestRes.data);
         if (trendingRes.data) setTrendingTools(trendingRes.data);
         if (catRes.data) setCategories(catRes.data);
@@ -134,7 +138,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {featuredTools.length > 0 && (
+      {boostedTools.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="relative overflow-hidden rounded-2xl border border-brand-500/20 bg-gradient-to-b from-brand-500/[0.06] via-transparent to-transparent p-6 sm:p-8">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-500/[0.08] via-transparent to-transparent pointer-events-none" />
@@ -142,23 +146,47 @@ export default function HomePage() {
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-brand-500/15 border border-brand-500/25 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-brand-400" />
+                    <Rocket className="w-5 h-5 text-brand-400" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-bold text-white">Featured Tools</h2>
-                    <p className="text-sm text-surface-400 mt-0.5">Editor's picks & boosted tools</p>
+                    <h2 className="text-3xl font-bold text-white">Boosted Tools</h2>
+                    <p className="text-sm text-surface-400 mt-0.5">Sponsored picks from the community</p>
                   </div>
                 </div>
-                <Link to="/tools?sort=featured" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
+                <Link to="/tools?sort=boosted" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
                   View all <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {featuredTools.map((tool) => (
+                {boostedTools.map((tool) => (
                   <ToolCard key={tool.id} tool={tool} />
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+      )}
+
+      {editorsPicks.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Editor's Picks</h2>
+                <p className="text-sm text-surface-400 mt-0.5">Hand-selected by our team</p>
+              </div>
+            </div>
+            <Link to="/tools?sort=featured" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors">
+              View all <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {editorsPicks.map((tool) => (
+              <ToolCard key={tool.id} tool={tool} />
+            ))}
           </div>
         </section>
       )}

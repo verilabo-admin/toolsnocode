@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 export function SuccessPage() {
   const { user } = useAuth();
   const [boostConfirmed, setBoostConfirmed] = useState(false);
+  const [boostedSlug, setBoostedSlug] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
   useSEO({
@@ -30,13 +31,15 @@ export function SuccessPage() {
     const checkBoost = async () => {
       const { data } = await supabase
         .from('tools')
-        .select('id')
+        .select('id, slug')
         .eq('user_id', user.id)
         .eq('is_boosted', true)
+        .order('boost_expires_at', { ascending: false })
         .limit(1);
 
       if (data && data.length > 0) {
         setBoostConfirmed(true);
+        setBoostedSlug(data[0].slug);
         setChecking(false);
         return;
       }
@@ -107,10 +110,17 @@ export function SuccessPage() {
         </div>
 
         <div className="space-y-3">
-          <Link to="/tools" className="w-full btn-primary py-3 text-base">
-            Go to Your Tools
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          {boostedSlug ? (
+            <Link to={`/tools/${boostedSlug}/edit`} className="w-full btn-primary py-3 text-base">
+              <Play className="w-4 h-4" />
+              Add a demo video now
+            </Link>
+          ) : (
+            <Link to="/tools" className="w-full btn-primary py-3 text-base">
+              Go to Your Tools
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
           <Link
             to="/account"
             className="w-full btn-secondary py-3 text-base"

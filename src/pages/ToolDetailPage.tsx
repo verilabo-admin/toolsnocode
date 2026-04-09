@@ -13,6 +13,7 @@ import UpvoteButton from '../components/ui/UpvoteButton';
 import VerifyToolButton from '../components/ui/VerifyToolButton';
 import type { Tool, Tutorial, Expert, Project } from '../types';
 import { useSEO } from '../hooks/useSEO';
+import { parseVideoUrl } from '../lib/video';
 
 export default function ToolDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -28,6 +29,11 @@ export default function ToolDetailPage() {
   const [experts, setExperts] = useState<Expert[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const demoVideo = useMemo(
+    () => (tool?.is_boosted && tool.video_url ? parseVideoUrl(tool.video_url) : null),
+    [tool?.is_boosted, tool?.video_url],
+  );
 
   useEffect(() => {
     async function load() {
@@ -269,6 +275,22 @@ export default function ToolDetailPage() {
           </div>
         </div>
       </div>
+
+      {demoVideo && (
+        <div className="mb-6">
+          <div className="relative w-full rounded-xl border border-surface-800/50 overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+            <iframe
+              src={demoVideo.embedUrl}
+              title={`${tool.name} demo video`}
+              className="absolute inset-0 w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          </div>
+        </div>
+      )}
 
       {tool.screenshot_urls && tool.screenshot_urls.length > 0 && (
         <div className="mb-6">
