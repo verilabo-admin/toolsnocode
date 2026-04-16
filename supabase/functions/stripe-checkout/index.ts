@@ -13,6 +13,10 @@ const stripe = new Stripe(stripeSecret, {
 
 const ALLOWED_ORIGINS = ['https://toolsnocode.com', 'http://localhost:5173', 'http://localhost:4173'];
 
+const ALLOWED_PRICES: Record<string, { mode: 'subscription' | 'payment' }> = {
+  price_1PrIksIs6L3hD9y66zoxwAX9: { mode: 'subscription' },
+};
+
 // Helper function to create responses with CORS headers
 function corsResponse(body: string | object | null, status = 200, requestOrigin?: string) {
   const origin = requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
@@ -61,6 +65,14 @@ Deno.serve(async (req) => {
 
     if (error) {
       return corsResponse({ error }, 400, reqOrigin);
+    }
+
+    const allowedPrice = ALLOWED_PRICES[price_id];
+    if (!allowedPrice) {
+      return corsResponse({ error: 'Invalid price_id' }, 400, reqOrigin);
+    }
+    if (allowedPrice.mode !== mode) {
+      return corsResponse({ error: `price_id ${price_id} requires mode ${allowedPrice.mode}` }, 400, reqOrigin);
     }
 
     // Validate redirect URLs to prevent open redirect attacks

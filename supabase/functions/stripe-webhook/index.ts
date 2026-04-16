@@ -45,11 +45,29 @@ Deno.serve(async (req) => {
       return new Response(`Webhook signature verification failed: ${message}`, { status: 400 });
     }
 
+    const { error: insertError } = await supabase
+      .from('stripe_webhook_events')
+      .insert({ event_id: event.id, event_type: event.type });
+
+    if (insertError) {
+      if (insertError.code === '23505') {
+        console.info(`Duplicate webhook event ignored: ${event.id} (${event.type})`);
+        return Response.json({ received: true, duplicate: true });
+      }
+      console.error('Failed to record webhook event:', insertError);
+      return Response.json({ error: 'Failed to record event' }, { status: 500 });
+    }
+
+    try {
+      await handleEvent(event);
+    } catch (handlerError) {
+      console.error('Webhook handler error:', handlerError);
+      await supabase.from('stripe_webhook_events').delete().eq('event_id', event.id);
+      return Response.json({ error: 'Handler failed' }, { status: 500 });
+    }
+
     EdgeRuntime.waitUntil(
-      Promise.all([
-        handleEvent(event).catch(err => console.error('Webhook handler error:', err)),
-        deactivateExpiredBoosts().catch(err => console.error('Expired boost cleanup error:', err)),
-      ])
+      deactivateExpiredBoosts().catch(err => console.error('Expired boost cleanup error:', err))
     );
 
     return Response.json({ received: true });
@@ -225,7 +243,7 @@ async function syncCustomerFromStripe(customerId: string) {
     if (subscription.status === 'active' && toolId) {
       await activateBoost(customerId, toolId, subscription.current_period_end);
     } else if (['canceled', 'unpaid', 'incomplete_expired', 'past_due'].includes(subscription.status)) {
-      await deactivateBoostForCustomer(customerId);
+      await deactivateBoostForCustomer(customerId, toolId);
     }
 
     console.info(`Successfully synced subscription for customer: ${customerId}`);
@@ -270,7 +288,7 @@ async function activateBoost(customerId: string, toolId: string, periodEnd: numb
   }
 }
 
-async function deactivateBoostForCustomer(customerId: string) {
+async function deactivateBoostForCustomer(customerId: string, toolId?: string) {
   try {
     const { data: customerData } = await supabase
       .from('stripe_customers')
@@ -280,7 +298,7 @@ async function deactivateBoostForCustomer(customerId: string) {
 
     if (!customerData?.user_id) return;
 
-    const { error } = await supabase
+    let query = supabase
       .from('tools')
       .update({
         is_boosted: false,
@@ -290,10 +308,16 @@ async function deactivateBoostForCustomer(customerId: string) {
       .eq('user_id', customerData.user_id)
       .eq('is_boosted', true);
 
+    if (toolId) {
+      query = query.eq('id', toolId);
+    }
+
+    const { error } = await query;
+
     if (error) {
       console.error('Error deactivating boost:', error);
     } else {
-      console.info(`Boost deactivated for customer ${customerId}`);
+      console.info(`Boost deactivated for customer ${customerId}${toolId ? ` tool ${toolId}` : ' (all tools)'}`);
     }
   } catch (error) {
     console.error('Error in deactivateBoostForCustomer:', error);

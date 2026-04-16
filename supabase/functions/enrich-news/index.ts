@@ -106,6 +106,20 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const CRON_SECRET = Deno.env.get("CRON_SECRET");
+    if (!CRON_SECRET) {
+      return new Response(JSON.stringify({ error: "Server not configured" }), {
+        status: 500,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    if (req.headers.get("X-Cron-Secret") !== CRON_SECRET) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     const { newsId } = await req.json();
 
     if (!newsId || typeof newsId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newsId)) {
