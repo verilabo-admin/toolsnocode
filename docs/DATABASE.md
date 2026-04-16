@@ -22,6 +22,8 @@ Postgres gestionado por Supabase. Todas las tablas de `public.` tienen RLS activ
 | `stripe_customers` | 1 | Map `user_id` ↔ `stripe_customer_id`. |
 | `stripe_subscriptions` | 2 | Estado de suscripción por usuario. |
 | `stripe_orders` | 0 | Pagos one-off. |
+| `stripe_webhook_events` | 0 | Idempotencia de webhooks Stripe (PK = `event_id`). |
+| `client_errors` | 0 | Errores capturados por el `ErrorBoundary` de React. INSERT abierto; SELECT solo service_role. |
 
 ## Convenciones de migraciones
 
@@ -36,12 +38,13 @@ Postgres gestionado por Supabase. Todas las tablas de `public.` tienen RLS activ
 - **Escritura por propietario**: `INSERT`/`UPDATE`/`DELETE` se restringen con `USING (auth.uid() = user_id)` o equivalente (p. ej. `owner_id` en `tools`).
 - **Tablas Stripe**: `SELECT` limitado a filas cuyo `user_id = auth.uid()`; escrituras solo desde service role (edge functions).
 - **Favorites / votes**: política per-user clásica.
+- **`client_errors`**: solo tiene policy de `INSERT` (anon+authenticated). Sin `SELECT` — lecturas se hacen por dashboard o scripts con `service_role`.
 
 ## Triggers destacados
 
 ### `enforce_tool_video_url_boost`
 
-Archivo: `20260409165012_enforce_video_url_requires_boost.sql`, actualizado por `20260414120000_fix_security_advisor_warnings.sql`.
+Archivo: `20260409165012_enforce_video_url_requires_boost.sql`, endurecido en `20260414122202_fix_security_advisor_warnings.sql` (revertido brevemente por `20260414183522_revert_security_advisor_warnings.sql` y re-aplicado por `20260414185612_fix_security_advisor_warnings.sql`).
 
 Fuerza `video_url = ''` al insertar/actualizar una tool si `is_boosted = false`. Evita que usuarios pongan un vídeo destacado sin pagar la suscripción. Pinneado con `SET search_path = public, pg_temp` para evitar hijacking.
 
@@ -67,7 +70,7 @@ Habilitadas en `20260322111757_enable_cron_and_net_extensions.sql`.
 - `Authenticated users can upload` — INSERT si el `userId` del path coincide con `auth.uid()`.
 - `Users can update own uploads` — UPDATE sobre propias.
 - `Users can delete own uploads` — DELETE sobre propias.
-- ~~`Public read access on uploads`~~ — **eliminada** en `20260414120000_fix_security_advisor_warnings.sql`. El listing público del bucket era innecesario porque las URLs se resuelven por CDN sin pasar por `storage.objects` SELECT.
+- ~~`Public read access on uploads`~~ — **eliminada** en `20260414185612_fix_security_advisor_warnings.sql` (previamente eliminada en `20260414122202_...`, re-creada por `20260414183522_revert_...`, y finalmente eliminada de nuevo). El listing público del bucket era innecesario porque las URLs se resuelven por CDN sin pasar por `storage.objects` SELECT.
 
 ## Aplicar migraciones
 

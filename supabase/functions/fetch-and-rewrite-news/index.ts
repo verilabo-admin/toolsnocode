@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { safeFetch } from "../_shared/http-safe.ts";
 
 const ALLOWED_ORIGINS = ["https://toolsnocode.com", "http://localhost:5173", "http://localhost:4173"];
 
@@ -111,28 +112,16 @@ function extractMainContent(html: string): string {
   return stripTags(html).slice(0, 5000);
 }
 
-function isPrivateUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    if (!["http:", "https:"].includes(parsed.protocol)) return true;
-    const hostname = parsed.hostname;
-    return /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|localhost|::1|\[::1\])/.test(hostname);
-  } catch {
-    return true;
-  }
-}
-
 async function fetchArticleData(url: string): Promise<{ image: string | null; rawContent: string }> {
   try {
-    if (isPrivateUrl(url)) return { image: null, rawContent: "" };
-    const res = await fetch(url, {
+    const res = await safeFetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; ToolsNoCode/1.0)",
         "Accept": "text/html,application/xhtml+xml",
       },
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) return { image: null, rawContent: "" };
+    if (!res || !res.ok) return { image: null, rawContent: "" };
     const html = await res.text();
     return { image: extractImage(html), rawContent: extractMainContent(html) };
   } catch {

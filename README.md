@@ -40,7 +40,7 @@ _frontend/
 │   ├── lib/             # supabase, stripe, video clients
 │   └── types/           # tipos TS compartidos
 ├── supabase/
-│   ├── migrations/      # 30+ migraciones SQL
+│   ├── migrations/      # 31 migraciones SQL
 │   └── functions/       # 6 Edge Functions (Deno)
 └── docs/
     ├── ARCHITECTURE.md  # diseño de sistema y flujos

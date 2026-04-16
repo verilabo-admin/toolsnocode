@@ -13,6 +13,15 @@ function getCorsHeaders(req: Request) {
 
 const BASE_URL = "https://toolsnocode.com";
 
+function xmlEscape(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 Deno.serve(async (req: Request) => {
   try {
     if (req.method === "OPTIONS") {
@@ -66,35 +75,35 @@ Deno.serve(async (req: Request) => {
       const lastmod = tool.updated_at
         ? tool.updated_at.split("T")[0]
         : today;
-      xml += `\n  <url><loc>${BASE_URL}/tools/${tool.slug}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+      xml += `\n  <url><loc>${BASE_URL}/tools/${xmlEscape(tool.slug)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
     }
 
     for (const expert of expertsRes.data ?? []) {
       const lastmod = expert.updated_at
         ? expert.updated_at.split("T")[0]
         : today;
-      xml += `\n  <url><loc>${BASE_URL}/experts/${expert.slug}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
+      xml += `\n  <url><loc>${BASE_URL}/experts/${xmlEscape(expert.slug)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
     }
 
     for (const tutorial of tutorialsRes.data ?? []) {
       const lastmod = tutorial.updated_at
         ? tutorial.updated_at.split("T")[0]
         : today;
-      xml += `\n  <url><loc>${BASE_URL}/tutorials/${tutorial.slug}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
+      xml += `\n  <url><loc>${BASE_URL}/tutorials/${xmlEscape(tutorial.slug)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
     }
 
     for (const project of projectsRes.data ?? []) {
       const lastmod = project.updated_at
         ? project.updated_at.split("T")[0]
         : today;
-      xml += `\n  <url><loc>${BASE_URL}/projects/${project.slug}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`;
+      xml += `\n  <url><loc>${BASE_URL}/projects/${xmlEscape(project.slug)}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`;
     }
 
     for (const article of newsRes.data ?? []) {
       const lastmod = article.published_at
         ? article.published_at.split("T")[0]
         : today;
-      xml += `\n  <url><loc>${BASE_URL}/news/${article.slug}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`;
+      xml += `\n  <url><loc>${BASE_URL}/news/${xmlEscape(article.slug)}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`;
     }
 
     xml += "\n</urlset>";

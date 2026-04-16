@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { safeFetch } from "../_shared/http-safe.ts";
 
 const ALLOWED_ORIGINS = ["https://toolsnocode.com", "http://localhost:5173", "http://localhost:4173"];
 
@@ -156,13 +157,7 @@ Deno.serve(async (req: Request) => {
 
     let html = "";
     try {
-      const urlObj = new URL(article.url);
-      if (!["http:", "https:"].includes(urlObj.protocol)) throw new Error("Invalid protocol");
-      const hostname = urlObj.hostname;
-      if (/^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|localhost|::1|\[::1\])/.test(hostname)) {
-        throw new Error("Private IP");
-      }
-      const response = await fetch(article.url, {
+      const response = await safeFetch(article.url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (compatible; ToolsNoCode/1.0)",
           "Accept": "text/html,application/xhtml+xml",
@@ -170,7 +165,7 @@ Deno.serve(async (req: Request) => {
         },
         signal: AbortSignal.timeout(10000),
       });
-      if (response.ok) html = await response.text();
+      if (response && response.ok) html = await response.text();
     } catch {
       // silently continue
     }

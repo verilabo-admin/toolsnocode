@@ -1,4 +1,5 @@
-import { Component, type ReactNode } from 'react';
+import { Component, type ReactNode, type ErrorInfo } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface Props {
   children: ReactNode;
@@ -18,8 +19,20 @@ export default class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, info.componentStack);
+  async componentDidCatch(error: Error, info: ErrorInfo) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from('client_errors').insert({
+        message: error.message.slice(0, 2000),
+        stack: error.stack?.slice(0, 8000) ?? null,
+        component_stack: info.componentStack?.slice(0, 8000) ?? null,
+        url: window.location.href.slice(0, 2000),
+        user_agent: navigator.userAgent.slice(0, 500),
+        user_id: user?.id ?? null,
+      });
+    } catch {
+      // Swallow — the UI already shows the fallback; don't mask the original error.
+    }
   }
 
   render() {
